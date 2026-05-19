@@ -27,6 +27,7 @@ async function initialisePage() {
   await loadSectionPartials();
   cacheElements();
   bindNavigation();
+  preparePlaylistCarousel();
   await loadPoems();
   renderPoems();
   observePoemScrollEnd();
@@ -92,6 +93,22 @@ function bindNavigation() {
   });
 
   app.elements.menuButton.addEventListener('click', showMainMenu);
+}
+
+/**
+ * Duplicates the playlist cards once so the horizontal marquee can loop
+ * smoothly without jumping above the fixed title.
+ */
+function preparePlaylistCarousel() {
+  const playlist = document.getElementById('playlist');
+  const playlistCards = [...playlist.children];
+
+  playlistCards.forEach((card) => {
+    const clone = card.cloneNode(true);
+    clone.setAttribute('aria-hidden', 'true');
+    clone.tabIndex = -1;
+    playlist.appendChild(clone);
+  });
 }
 
 /**
@@ -271,13 +288,27 @@ async function loadPoems() {
   const savedPoems = localStorage.getItem(app.poemsStorageKey);
   if (savedPoems) {
     app.poems = JSON.parse(savedPoems);
+    normalisePoems();
+    savePoems();
     return;
   }
 
   const response = await fetch(app.poemsPath);
   if (!response.ok) throw new Error(`Could not load ${app.poemsPath}`);
   app.poems = await response.json();
+  normalisePoems();
   savePoems();
+}
+
+/**
+ * Keeps exactly one blank poem available for writing and removes accidental
+ * duplicate empty cards from previous sessions.
+ */
+function normalisePoems() {
+  const filledPoems = app.poems.filter((poem) => poem.content.trim());
+  const blankPoem = app.poems.find((poem) => !poem.content.trim()) || createBlankPoem();
+
+  app.poems = [...filledPoems, blankPoem];
 }
 
 function savePoems() {
@@ -310,9 +341,11 @@ function createPoemNotepad(poem) {
 
   textArea.className = 'poem-text';
   textArea.value = poem.content;
+  textArea.rows = 1;
   textArea.setAttribute('aria-label', 'Poem text');
   textArea.addEventListener('input', () => {
     poem.content = textArea.value;
+    autoSizeTextArea(textArea);
     savePoems();
   });
 
@@ -322,7 +355,16 @@ function createPoemNotepad(poem) {
   });
 
   article.append(dateInput, textArea);
+  requestAnimationFrame(() => autoSizeTextArea(textArea));
   return article;
+}
+
+/**
+ * Makes each notepad grow with its text instead of scrolling inside the card.
+ */
+function autoSizeTextArea(textArea) {
+  textArea.style.height = 'auto';
+  textArea.style.height = `${textArea.scrollHeight}px`;
 }
 
 /**
@@ -342,13 +384,17 @@ function addBlankPoem() {
   const lastPoem = app.poems[app.poems.length - 1];
   if (lastPoem && !lastPoem.content.trim()) return;
 
-  const poem = {
-    id: `poem-${Date.now()}`,
-    date: getLocalDateKey(new Date()),
-    content: ''
-  };
+  const poem = createBlankPoem();
 
   app.poems.push(poem);
   savePoems();
   app.elements.poemsBoard.appendChild(createPoemNotepad(poem));
+}
+
+function createBlankPoem() {
+  return {
+    id: `poem-${Date.now()}`,
+    date: getLocalDateKey(new Date()),
+    content: ''
+  };
 }
