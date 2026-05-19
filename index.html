@@ -1,231 +1,46 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
   <title>Special Webpage</title>
-  
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chewy&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-
-
-  <div class="background-container">
-    <div id="background-pooh" class="background-pooh"></div>
-    <div id="background-gradient" class="background-gradient"></div>
-    <div id="playlist-background" class="playlist-background section hidden"></div>
-    <div id="anniversary-background" class="anniversary-background hidden"></div>
-    <div id="boardOfDirectors-background" class="boardOfDirectors-background hidden"></div>    
-    <div id="valentine-background" class="valentine-background hidden"></div>  
+  <!-- Background layers are kept outside the content so every section can swap its own mood. -->
+  <div class="background-container" aria-hidden="true">
+    <div id="background-pooh" class="background-layer background-pooh"></div>
+    <div id="background-gradient" class="background-layer background-gradient"></div>
+    <div id="playlist-background" class="background-layer playlist-background hidden"></div>
+    <div id="anniversary-background" class="background-layer anniversary-background hidden"></div>
+    <div id="board-background" class="background-layer board-background hidden"></div>
   </div>
-  
-  <!-- Main content container -->
-  <div class="content">
-    <!-- Title -->
-    <h1 id= "main-title" class="main-title">Welcome to your webpage, my love ❤️</h1>
-  
-    <div id="main-buttons" class="main-buttons menu-buttons ">
-      <button id="anniversary-button">Aniversary📅</button>
-      <button id="versicle-button">Daily verse📕</button>
-      <button id="playlist-button">Playlist🎶</button>
-      <button id="boardOfDirectors-button">Board👩🏽‍❤️‍💋‍👨🏽</button>
-      <button id="valentine-button">My Valentine💓</button>
-      <button id="poems-button">Poems❤️</button>
-    </div>
-    
 
-    <!-- Sections (Timer, Versicle, etc.) -->
-    <div id="timer-section" class="section hidden">
-      <h2>Time until our anniversary</h2>
-      <p id="countdown-timer"></p>
-    </div>
+  <main class="content">
+    <section id="home-section" class="home-section">
+      <h1 id="main-title" class="main-title">Welcome to your webpage, my love ❤️</h1>
 
-    <div id="versicle-section" class="section hidden">
-      <h2>Your daily verse</h2>
-      <div class="versicle-box" id="versicle-box"></div>
-    </div>
-
-  
-
-    <h2 id= 'section-title2'class="section-title2 hidden">Best Things In This Year</h2>
-
-    
-    <div id="directors-section" class="section directors-section hidden">
-      <!-- Main Title -->
-      <h2 class="section-title1">Our Board Of Directors 👩🏽‍❤️‍💋‍👨🏽</h2>
-
-      <div id="collage-container">
-        <img src="images/collage1.jpg" alt="Image 1" class="collage-image">
-        <img src="images/collage2.jpg" alt="Image 2" class="collage-image">
-        <img src="images/collage3.jpg" alt="Image 3" class="collage-image">
-        <img src="images/collage4.jpg" alt="Image 4" class="collage-image">
-        <img src="images/collage5.jpg" alt="Image 5" class="collage-image">
-        <img src="images/collage6.jpg" alt="Image 6" class="collage-image">
-      </div>
-      
-      
-      <!-- Sección: Mejoras del año -->
-      <h2 class="section-title">Things We Improved This Year</h2>
-      <div class="notebook-box">
-        <h2>Áreas de Mejora</h2>
-
-        <h3>Comunicación efectiva</h3>
-        <p>Hemos mejorado la manera de comunicarnos, respetándonos en situaciones de estrés y pensando en el otro.</p>
-
-        <h3>Resolución de conflictos</h3>
-        <p>Hemos mejorado en la manera de solucionar conflictos, respetando las necesidades de cada uno y aprendiendo a conocernos mejor.</p>
-
-        <h3>Fortalecimiento de nuestro vínculo</h3>
-        <p>Hemos fortalecido nuestro vínculo al añadir a otro integrante en la relación.</p>
-
-        <h3>Profundización con Dios</h3>
-        <p>Nos hemos acercado más a Dios, poniendo nuestra relación a su voluntad.</p>
-      </div>
-      
-      <!-- Sección: Áreas de mejora para el próximo año -->
-      <h2 class="section-title">Things to Improve for Next Year</h2>
-      <div class="notebook-box">
-        
-
-      <h3>Crecimiento Espiritual</h3>
-      <p>Tenemos que mejorar nuestra relación con Dios, dedicando tiempo a la lectura de la Biblia y a la oración. Esto fortalecerá nuestra conexión espiritual y nos brindará guía y fortaleza.</p>
-
-      <h3>Mejorar la Comunicación</h3>
-      <p>Debemos seguir trabajando en nuestra comunicación para evitar malentendidos y conflictos. Esto implica escuchar activamente, expresar nuestros sentimientos de manera clara y respetuosa, y evitar suposiciones.</p>
-
-      <h3>Manejo del Estrés</h3>
-      <p>Necesitamos mejorar la forma en que manejamos el estrés. Esto incluye reconocer cuando necesitamos espacio personal y respetarlo, así como controlar nuestras palabras y evitar reacciones impulsivas.</p>
-      </div>
-      
-      <!-- Sección: Cosas por las que orar el próximo año -->
-      <h2 class="section-title">Things to Pray for Next Year</h2>
-      <div id="collage-container-prayer">
-        <img src="images/prayer2.jpg" alt="Prayer Image 1" class="collage-image">
-        <img src="images/prayer2.jpg" alt="Prayer Image 2" class="collage-image">
-        <img src="images/prayer3.jpg" alt="Prayer Image 3" class="collage-image">
-        <img src="images/prayer4.jpg" alt="Prayer Image 4" class="collage-image">
-        <img src="images/prayer5.jpg" alt="Prayer Image 5" class="collage-image">
-        <img src="images/prayer5.jpg" alt="Prayer Image 6" class="collage-image">
-      </div>
-    </div>
-
- 
-   
-    <!-- Valentine Section -->
-    <div id="valentine-section" class="section valentine-section hidden">
-      <p id="valentine-question">Will you be my Valentine? 💖</p>
-      <button id="yes-button">Yes 💓</button>
-      <button id="no-button">No 💔</button>
-
-      <!-- Image container (initially hidden) -->
-      <div id="image-container" class="hidden">
-        <img id="valentine-image" src="" alt="Valentine's Image" />
-      </div>
-
-      <!-- Incorrect answer banner (initially hidden) -->
-      <div id="incorrect-message" class="hidden">Incorrect answer. Try again!</div>
-    </div>
-
-    
-    
-
-    <!-- Playlist songs -->
-    <div id="playlist-section" class="section hidden">
-    <h2>Our playlist❤️</h2>
-    <div class="playlist-box" id="playlist-box">
-     <a href="https://open.spotify.com/playlist/3OxJAxxVcpxIvfFfQOac8M?si=2F7QCbiZQ2q-nrWtjAifhg&pi=e-JBWUKDjdQpep" class="playlist-link">
-        <div id="playlist" class="playlist-content">
-           <button class="playlist-buttons">
-              <img src="images/song1.jpg" alt="Album Cover" class="songs">
-              <div class="song-info">
-                 <span class="song-title">Tu poeta</span>
-                 <span class="song-artist">Alex Campos</span>
-              </div>
-           </button>
-           <button class="playlist-buttons">
-              <img src="images/song2.jpg" alt="Album Cover" class="songs">
-              <div class="song-info">
-                 <span class="song-title">La Chica De Ipanema</span>
-                 <span class="song-artist">Jarabe De Palo</span>
-              </div>
-           </button>
-           <button class="playlist-buttons">
-              <img src="images/song3.jpg" alt="Album Cover" class="songs">
-              <div class="song-info">
-                 <span class="song-title">Mi Bendicion</span>
-                 <span class="song-artist">Juan Luis Guerra</span>
-              </div>
-           </button>
-           <button class="playlist-buttons">
-              <img src="images/song4.jpg" alt="Album Cover" class="songs">
-              <div class="song-info">
-                 <span class="song-title">Te Regalo</span>
-                 <span class="song-artist">Carla Morrison</span>
-              </div>
-           </button>
-           <button class="playlist-buttons">
-              <img src="images/song5.jpg" alt="Album Cover" class="songs">
-              <div class="song-info">
-                 <span class="song-title">La mujer Perfecta</span>
-                 <span class="song-artist">KURT</span>
-              </div>
-           </button>
-           <button class="playlist-buttons">
-              <img src="images/song6.jpg" alt="Album Cover" class="songs">
-              <div class="song-info">
-                 <span class="song-title">La Chica De Ipanema</span>
-                 <span class="song-artist">Jarabe De Palo</span>
-              </div>
-           </button>
-        </div>
-     </a>
-  </div>
-    </div>
-
-    <!-- Poems background -->
-    <div id="poems-background" class="hidden"></div>
-
-    <!-- Poems section (HIDDEN BY DEFAULT) -->
-    <section id="poems-section" class="section hidden">
-      <div class="poems-notepad">
-        <div class="poems-content">
-
-          <article class="poem">
-           
-            <p>Amo esa pequeña sonrisa que me das cada vez que te miro
-
-              Esa mirada perdida de no saber si caerte de amor o seguir besandome
-
-              Ese suspiro cuando te abrazo 
-              y todas las risas que nos echamos sin haber dicho palabra alguna
-              Te amoo❤️
-            </p>
-          </article>
-
-
-
-        </div>
-      </div>
+      <nav id="main-buttons" class="menu-buttons" aria-label="Main sections">
+        <button type="button" data-section="timer">Aniversary📅</button>
+        <button type="button" data-section="versicle">Daily verse📕</button>
+        <button type="button" data-section="playlist">Playlist🎶</button>
+        <button type="button" data-section="directors">Board👩🏽‍❤️‍💋‍👨🏽</button>
+        <button type="button" data-section="poems">Poems❤️</button>
+      </nav>
     </section>
 
+    <!-- Section HTML is loaded from /sections to keep this file clean. -->
+    <div id="sections-root"></div>
+  </main>
 
+  <button id="menu" type="button" aria-label="Back to main menu">
+    <img src="images/icon.png" alt="" class="menu-image">
+  </button>
 
-   
-
-
-  
-  
-    <!-- Menu Icon -->
-    <button id="menu">
-      <img src="images/icon.png" alt="Menu" class="menu-image">
-    </button>
-    
-
-  <script src="script.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

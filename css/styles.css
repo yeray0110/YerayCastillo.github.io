@@ -1,0 +1,461 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+@font-face {
+  font-family: "Digital7";
+  src: url("../digital-7.ttf") format("truetype");
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- Backgrounds ---------- */
+.background-container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #f9dca7;
+  z-index: 0;
+}
+
+.background-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.background-pooh {
+  background-color: #f7d18f;
+  background-image: url("../images/background.png");
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: contain;
+  z-index: 1;
+}
+
+.background-gradient {
+  background: linear-gradient(to top, rgba(249, 238, 188, 0.08), rgba(234, 151, 9, 0.28));
+  z-index: 2;
+}
+
+.anniversary-background {
+  background: url("../images/anniversary.jpg") no-repeat center center / cover;
+  z-index: 3;
+}
+
+.playlist-background {
+  background: linear-gradient(80deg, #202a2d, #081514 50%, #2e393b);
+  z-index: 4;
+}
+
+.board-background {
+  background: linear-gradient(45deg, #a1c4fd, #c2e9fb);
+  z-index: 5;
+}
+
+@media (max-width: 700px) {
+  .background-pooh {
+    background-size: cover;
+    background-position: center center;
+  }
+}
+
+/* ---------- Page Shell ---------- */
+.content {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  text-align: center;
+}
+
+.home-section,
+.section {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.home-section {
+  display: grid;
+  place-content: center;
+  gap: 24px;
+  padding: 32px 20px;
+}
+
+.main-title {
+  max-width: 760px;
+  margin: 0 auto;
+  color: #dc4500;
+  font-family: "Chewy", serif;
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  line-height: 1.05;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.menu-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(135px, 1fr));
+  gap: 12px;
+  width: min(360px, calc(100vw - 40px));
+  margin: 0 auto;
+}
+
+.menu-buttons button {
+  min-height: 52px;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  background-color: #ff9900;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.05rem;
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.menu-buttons button:hover {
+  background-color: #ff7700;
+  transform: translateY(-2px);
+}
+
+#menu {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.menu-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ---------- Anniversary ---------- */
+.timer-section {
+  display: grid;
+  place-content: center;
+  padding: 72px 24px;
+  color: whitesmoke;
+  text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+.timer-section h2 {
+  margin: 0 0 12px;
+  font-family: "Chewy", serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 400;
+}
+
+#countdown-timer {
+  margin: 0;
+  font-family: "Digital7", monospace;
+  font-size: clamp(1.5rem, 4vw, 2.4rem);
+}
+
+/* ---------- Daily Verse ---------- */
+.versicle-section {
+  display: grid;
+  place-content: center;
+  padding: 80px 20px;
+}
+
+.versicle-section h2 {
+  margin: 0 0 22px;
+  color: whitesmoke;
+  font-family: "Chewy", serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+.versicle-box {
+  width: min(760px, calc(100vw - 40px));
+  min-height: 220px;
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px);
+  border-radius: 8px;
+  background: rgba(255, 140, 71, 0.94);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.2);
+  color: white;
+  text-align: center;
+  text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.versicle-box h3,
+.versicle-box p {
+  margin: 0;
+}
+
+.versicle-box h3 {
+  font-size: clamp(1.35rem, 3vw, 2rem);
+}
+
+.versicle-box p {
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  line-height: 1.55;
+}
+
+/* ---------- Playlist ---------- */
+.playlist-section {
+  height: 100vh;
+  overflow-y: auto;
+  padding: 88px 20px 36px;
+}
+
+.playlist-section h2 {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  color: whitesmoke;
+  font-family: "Chewy", serif;
+  font-size: 2rem;
+  font-weight: 400;
+  text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+  z-index: 8;
+}
+
+.playlist-link {
+  display: block;
+  width: min(360px, calc(100vw - 40px));
+  margin: 0 auto;
+  text-decoration: none;
+}
+
+.playlist-content {
+  display: grid;
+  gap: 16px;
+  padding-top: 20px;
+}
+
+.playlist-buttons {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 64px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 8px;
+  background-color: #1d4646;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.playlist-buttons:hover {
+  background-color: #245454;
+  transform: translateY(-2px);
+}
+
+.songs {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 auto;
+  margin-right: 12px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.song-info {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+}
+
+.song-title {
+  font-size: 1rem;
+}
+
+.song-artist {
+  color: #b3b3b3;
+  font-size: 0.9rem;
+}
+
+/* ---------- Board ---------- */
+.directors-section {
+  height: 100vh;
+  overflow-y: auto;
+  padding: 58px 18px 36px;
+}
+
+.section-title1 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  padding: 12px 56px;
+  background-color: #c6e1f2;
+  color: #dc4500;
+  font-family: "Chewy", serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 9;
+}
+
+.board-scroll {
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+.collage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px auto 28px;
+}
+
+.collage-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.collage-image:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
+}
+
+.section-title {
+  margin: 28px 0 14px;
+  color: #dc4500;
+  font-family: "Chewy", serif;
+  font-size: clamp(1.6rem, 4vw, 2rem);
+  font-weight: 400;
+  text-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.notebook-box {
+  width: min(800px, 100%);
+  margin: 0 auto 22px;
+  padding: 20px;
+  border: 2px dashed #ff9900;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+  text-align: left;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.notebook-box h3 {
+  margin: 12px 0 4px;
+}
+
+.notebook-box p {
+  margin: 0;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.notebook-box p:last-child {
+  border-bottom: 0;
+}
+
+@media (max-width: 680px) {
+  .collage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Poems ---------- */
+.poems-section {
+  height: 100vh;
+  overflow-y: auto;
+  padding: 70px 18px 120px;
+  background:
+    radial-gradient(circle at 20% 20%, #ffffff 0%, transparent 38%),
+    radial-gradient(circle at 80% 30%, #ffffff 0%, transparent 40%),
+    radial-gradient(circle at 50% 72%, #ffffff 0%, transparent 46%),
+    linear-gradient(to bottom, #b7ddff, #eaf6ff);
+}
+
+.poems-board {
+  display: grid;
+  gap: 24px;
+  width: min(760px, 100%);
+  margin: 0 auto;
+}
+
+.poems-notepad {
+  position: relative;
+  min-height: 320px;
+  padding: 22px 22px 26px;
+  border-radius: 8px;
+  background: #fffdf7;
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.14),
+    inset 0 0 0 1px #e6e2d8;
+}
+
+.poems-notepad::before {
+  content: "";
+  position: absolute;
+  inset: 62px 0 0;
+  border-radius: 0 0 8px 8px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 28px,
+    #e8e4da 29px
+  );
+  pointer-events: none;
+}
+
+.poem-date,
+.poem-text {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #2f2a24;
+  outline: none;
+}
+
+.poem-date {
+  height: 36px;
+  margin-bottom: 14px;
+  font-family: Arial, sans-serif;
+  font-size: 0.95rem;
+}
+
+.poem-text {
+  min-height: 230px;
+  resize: vertical;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.2rem;
+  line-height: 29px;
+}
+
+.poem-scroll-sentinel {
+  width: 100%;
+  height: 80px;
+}
