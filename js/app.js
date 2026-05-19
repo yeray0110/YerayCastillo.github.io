@@ -27,7 +27,6 @@ async function initialisePage() {
   await loadSectionPartials();
   cacheElements();
   bindNavigation();
-  preparePlaylistCarousel();
   await loadPoems();
   renderPoems();
   observePoemScrollEnd();
@@ -93,22 +92,6 @@ function bindNavigation() {
   });
 
   app.elements.menuButton.addEventListener('click', showMainMenu);
-}
-
-/**
- * Duplicates the playlist cards once so the horizontal marquee can loop
- * smoothly without jumping above the fixed title.
- */
-function preparePlaylistCarousel() {
-  const playlist = document.getElementById('playlist');
-  const playlistCards = [...playlist.children];
-
-  playlistCards.forEach((card) => {
-    const clone = card.cloneNode(true);
-    clone.setAttribute('aria-hidden', 'true');
-    clone.tabIndex = -1;
-    playlist.appendChild(clone);
-  });
 }
 
 /**

@@ -124,6 +124,10 @@ body {
   transition: background-color 180ms ease, transform 180ms ease;
 }
 
+.menu-placeholder {
+  min-height: 52px;
+}
+
 .menu-buttons button:hover {
   background-color: #ff7700;
   transform: translateY(-2px);
@@ -218,8 +222,8 @@ body {
 /* ---------- Playlist ---------- */
 .playlist-section {
   height: 100vh;
-  overflow: hidden;
-  padding: 112px 0 44px;
+  overflow-y: auto;
+  padding: 104px 20px 44px;
 }
 
 .playlist-section h2 {
@@ -238,30 +242,21 @@ body {
 
 .playlist-link {
   display: block;
-  width: 100%;
-  max-width: 100vw;
+  width: min(360px, calc(100vw - 40px));
   margin: 0 auto;
-  overflow: hidden;
   text-decoration: none;
 }
 
 .playlist-content {
-  display: flex;
-  width: max-content;
-  gap: 18px;
-  padding: 22px 20px 28px;
-  animation: playlist-slide 30s linear infinite;
-  will-change: transform;
-}
-
-.playlist-content:hover {
-  animation-play-state: paused;
+  display: grid;
+  gap: 16px;
+  padding-top: 24px;
 }
 
 .playlist-buttons {
   display: flex;
   align-items: center;
-  width: 320px;
+  width: 100%;
   min-height: 64px;
   padding: 7px 12px;
   border: 0;
@@ -276,16 +271,6 @@ body {
 .playlist-buttons:hover {
   background-color: #245454;
   transform: translateY(-2px);
-}
-
-@keyframes playlist-slide {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(calc(-50%));
-  }
 }
 
 .songs {
@@ -316,7 +301,7 @@ body {
 .directors-section {
   height: 100vh;
   overflow-y: auto;
-  padding: 84px 18px 44px;
+  padding: 96px 18px 54px;
 }
 
 .section-title1 {
@@ -345,7 +330,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin: 26px auto 32px;
+  margin: 34px auto 36px;
 }
 
 .collage-image {
@@ -406,14 +391,26 @@ body {
   }
 
   .directors-section {
-    padding-top: 92px;
+    padding: 118px 18px 80px;
+  }
+
+  .board-scroll {
+    padding-top: 10px;
+  }
+
+  .collage-grid {
+    gap: 14px;
+    margin: 34px auto 42px;
   }
 }
 
 /* ---------- Poems ---------- */
 .poems-section {
   height: 100vh;
-  overflow-y: auto;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
   padding: 82px 18px 120px;
   background:
     radial-gradient(circle at 20% 20%, #ffffff 0%, transparent 38%),
@@ -498,20 +495,18 @@ body {
   }
 
   .menu-buttons {
-    grid-template-columns: 1fr;
-    width: min(280px, calc(100vw - 48px));
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    width: min(340px, calc(100vw - 36px));
+    gap: 10px;
   }
 
   .playlist-section {
-    padding-top: 104px;
-  }
-
-  .playlist-buttons {
-    width: min(300px, calc(100vw - 48px));
+    padding: 104px 18px 54px;
   }
 
   .poems-section {
-    padding: 104px 16px 120px;
+    height: 100dvh;
+    padding: 128px 18px 150px;
   }
 
   .poems-board {
