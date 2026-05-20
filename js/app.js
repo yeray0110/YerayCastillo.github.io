@@ -269,45 +269,62 @@ function renderVersicle(verse) {
  */
 async function loadPoems() {
   const savedPoems = localStorage.getItem(app.poemsStorageKey);
+
   if (savedPoems) {
     app.poems = JSON.parse(savedPoems);
+
     normalisePoems();
     savePoems();
+
     return;
   }
 
   const response = await fetch(app.poemsPath);
-  if (!response.ok) throw new Error(`Could not load ${app.poemsPath}`);
+
+  if (!response.ok) {
+    throw new Error(`Could not load ${app.poemsPath}`);
+  }
+
   app.poems = await response.json();
+
   normalisePoems();
   savePoems();
 }
 
 /**
- * Keeps exactly one blank poem available for writing and removes accidental
- * duplicate empty cards from previous sessions.
+ * Keeps exactly one blank poem available for writing.
  */
 function normalisePoems() {
-  const filledPoems = app.poems.filter((poem) => poem.content.trim());
-  const blankPoem = app.poems.find((poem) => !poem.content.trim()) || createBlankPoem();
+  const filledPoems = app.poems.filter(
+    (poem) => poem.content.trim()
+  );
+
+  const blankPoem =
+    app.poems.find((poem) => !poem.content.trim()) ||
+    createBlankPoem();
 
   app.poems = [...filledPoems, blankPoem];
 }
 
 function savePoems() {
-  localStorage.setItem(app.poemsStorageKey, JSON.stringify(app.poems));
+  localStorage.setItem(
+    app.poemsStorageKey,
+    JSON.stringify(app.poems)
+  );
 }
 
 function renderPoems() {
   app.elements.poemsBoard.replaceChildren();
+
   app.poems.forEach((poem) => {
-    app.elements.poemsBoard.appendChild(createPoemNotepad(poem));
+    app.elements.poemsBoard.appendChild(
+      createPoemNotepad(poem)
+    );
   });
 }
 
 /**
- * Creates one editable notepad. Input events are debounced by the browser
- * naturally enough here because each edit only updates a small local JSON copy.
+ * Creates one editable growing notepad.
  */
 function createPoemNotepad(poem) {
   const article = document.createElement('article');
@@ -320,58 +337,85 @@ function createPoemNotepad(poem) {
   dateInput.className = 'poem-date';
   dateInput.type = 'date';
   dateInput.value = poem.date;
-  dateInput.setAttribute('aria-label', 'Poem date');
+
+  dateInput.setAttribute(
+    'aria-label',
+    'Poem date'
+  );
 
   textArea.className = 'poem-text';
   textArea.value = poem.content;
+
   textArea.rows = 1;
-  textArea.setAttribute('aria-label', 'Poem text');
+  textArea.wrap = 'soft';
+
+  textArea.spellcheck = false;
+
+  textArea.setAttribute(
+    'aria-label',
+    'Poem text'
+  );
+
+  const resize = () => {
+    textArea.style.height = 'auto';
+    textArea.style.height =
+      `${textArea.scrollHeight}px`;
+  };
+
+  resize();
+
   textArea.addEventListener('input', () => {
     poem.content = textArea.value;
-    autoSizeTextArea(textArea);
+
+    resize();
+
     savePoems();
+
+    const isLastPoem =
+      poem === app.poems[app.poems.length - 1];
+
+    if (isLastPoem && poem.content.trim()) {
+      addBlankPoem();
+    }
   });
 
   dateInput.addEventListener('input', () => {
     poem.date = dateInput.value;
+
     savePoems();
   });
 
   article.append(dateInput, textArea);
-  requestAnimationFrame(() => autoSizeTextArea(textArea));
+
+  requestAnimationFrame(resize);
+
   return article;
 }
 
 /**
- * Makes each notepad grow with its text instead of scrolling inside the card.
+ * Adds another empty poem at the bottom.
  */
-function autoSizeTextArea(textArea) {
-  textArea.style.height = 'auto';
-  textArea.style.height = `${textArea.scrollHeight}px`;
-}
-
-/**
- * When the user scrolls to the bottom of poems, a new blank notepad appears.
- */
-function observePoemScrollEnd() {
-  const observer = new IntersectionObserver((entries) => {
-    const reachedBottom = entries.some((entry) => entry.isIntersecting);
-    if (!reachedBottom || app.elements.sections.poems.classList.contains('hidden')) return;
-    addBlankPoem();
-  }, { root: app.elements.sections.poems, threshold: 0.9 });
-
-  observer.observe(app.elements.poemScrollSentinel);
-}
-
 function addBlankPoem() {
-  const lastPoem = app.poems[app.poems.length - 1];
-  if (lastPoem && !lastPoem.content.trim()) return;
+  const lastPoem =
+    app.poems[app.poems.length - 1];
+
+  if (
+    lastPoem &&
+    !lastPoem.content.trim()
+  ) {
+    return;
+  }
 
   const poem = createBlankPoem();
 
   app.poems.push(poem);
+
   savePoems();
-  app.elements.poemsBoard.appendChild(createPoemNotepad(poem));
+
+  const note =
+    createPoemNotepad(poem);
+
+  app.elements.poemsBoard.appendChild(note);
 }
 
 function createBlankPoem() {
