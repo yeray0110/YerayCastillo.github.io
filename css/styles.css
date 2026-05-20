@@ -96,7 +96,7 @@ body {
 
 .main-title {
   max-width: 760px;
- margin: 2px auto 0;
+  margin: 20px auto 0;
   color: #dc4500;
   font-family: "Chewy", serif;
   font-size: clamp(2rem, 4vw, 3.3rem);
