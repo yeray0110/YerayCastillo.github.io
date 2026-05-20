@@ -406,10 +406,7 @@ body {
 
 /* ---------- Poems ---------- */
 .poems-section {
-  height: 100dvh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-
+  width: 100%;
   padding: 82px 18px 120px;
 
   background:
@@ -438,7 +435,7 @@ body {
   background: #fffdf7;
 
   box-shadow:
-    0 18px 34px rgba(0, 0, 0, 0.14),
+    0 18px 34px rgba(0,0,0,0.14),
     inset 0 0 0 1px #e6e2d8;
 }
 
@@ -504,11 +501,9 @@ body {
   line-height: 29px;
 
   white-space: pre-wrap;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
 
-  touch-action: pan-y;
-
-  -webkit-overflow-scrolling: touch;
+  touch-action: auto;
 }
 
 @media (max-width: 700px) {
@@ -516,7 +511,15 @@ body {
     padding: 128px 18px 150px;
   }
 
+  .poems-board {
+    gap: 20px;
+  }
+
   .poems-notepad {
     padding: 20px 18px 24px;
+  }
+
+  .poem-text {
+    font-size: 1.1rem;
   }
 }

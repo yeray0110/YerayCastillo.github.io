@@ -262,6 +262,11 @@ function renderVersicle(verse) {
   app.elements.versicleBox.append(title, content);
 }
 
+
+
+/**
+ * Loads poems from localStorage first, otherwise from poems.json
+ */
 async function loadPoems() {
   const savedPoems = localStorage.getItem(app.poemsStorageKey);
 
@@ -286,14 +291,18 @@ async function loadPoems() {
   savePoems();
 }
 
+/**
+ * Keeps exactly one empty poem at the bottom
+ */
 function normalisePoems() {
   const filledPoems = app.poems.filter(
     (poem) => poem.content.trim()
   );
 
   const blankPoem =
-    app.poems.find((poem) => !poem.content.trim()) ||
-    createBlankPoem();
+    app.poems.find(
+      (poem) => !poem.content.trim()
+    ) || createBlankPoem();
 
   app.poems = [...filledPoems, blankPoem];
 }
@@ -315,10 +324,29 @@ function renderPoems() {
   });
 }
 
+/**
+ * Auto-growing textarea
+ */
+function autoSizeTextArea(textArea) {
+  textArea.style.height = '0px';
+
+  requestAnimationFrame(() => {
+    textArea.style.height =
+      textArea.scrollHeight + 'px';
+  });
+}
+
+/**
+ * Creates poem card
+ */
 function createPoemNotepad(poem) {
   const article = document.createElement('article');
-  const dateInput = document.createElement('input');
-  const textArea = document.createElement('textarea');
+
+  const dateInput =
+    document.createElement('input');
+
+  const textArea =
+    document.createElement('textarea');
 
   article.className = 'poems-notepad';
 
@@ -330,34 +358,31 @@ function createPoemNotepad(poem) {
   textArea.value = poem.content;
 
   textArea.rows = 1;
+  textArea.spellcheck = false;
 
-  const resize = () => {
-    textArea.style.height = '0px';
-    textArea.style.height = textArea.scrollHeight + 'px';
-  };
+  autoSizeTextArea(textArea);
 
-  resize();
-
-  requestAnimationFrame(resize);
-
-  setTimeout(resize, 0);
+  requestAnimationFrame(() => {
+    autoSizeTextArea(textArea);
+  });
 
   textArea.addEventListener('input', () => {
     poem.content = textArea.value;
 
-    resize();
+    autoSizeTextArea(textArea);
 
     savePoems();
 
     const isLast =
       poem === app.poems[app.poems.length - 1];
 
-    if (isLast && poem.content.trim()) {
+    if (
+      isLast &&
+      poem.content.trim()
+    ) {
       addBlankPoem();
     }
   });
-
-  window.addEventListener('resize', resize);
 
   dateInput.addEventListener('input', () => {
     poem.date = dateInput.value;
@@ -365,11 +390,18 @@ function createPoemNotepad(poem) {
     savePoems();
   });
 
+  window.addEventListener('resize', () => {
+    autoSizeTextArea(textArea);
+  });
+
   article.append(dateInput, textArea);
 
   return article;
 }
 
+/**
+ * Adds new empty poem
+ */
 function addBlankPoem() {
   const lastPoem =
     app.poems[app.poems.length - 1];
@@ -387,7 +419,8 @@ function addBlankPoem() {
 
   savePoems();
 
-  const note = createPoemNotepad(poem);
+  const note =
+    createPoemNotepad(poem);
 
   app.elements.poemsBoard.appendChild(note);
 }
