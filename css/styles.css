@@ -427,23 +427,19 @@ body {
 
 .poems-notepad {
   position: relative;
-
   padding: 22px 22px 26px;
 
   border-radius: 8px;
-
   background: #fffdf7;
 
   box-shadow:
-    0 18px 34px rgba(0,0,0,0.14),
+    0 18px 34px rgba(0, 0, 0, 0.14),
     inset 0 0 0 1px #e6e2d8;
 }
 
 .poems-notepad::before {
   content: "";
-
   position: absolute;
-
   top: 62px;
   left: 0;
   right: 0;
@@ -460,66 +456,31 @@ body {
   pointer-events: none;
 }
 
-.poem-date,
-.poem-text {
-  position: relative;
-  z-index: 1;
-
+.poem-date {
   width: 100%;
-
   border: none;
   outline: none;
-
   background: transparent;
+
+  margin-bottom: 14px;
+  font-family: Arial, sans-serif;
+  font-size: 0.95rem;
   color: #2f2a24;
 }
 
-.poem-date {
-  margin-bottom: 14px;
-
-  font-family: Arial, sans-serif;
-  font-size: 0.95rem;
-}
-
+/* 🔥 esto YA NO es textarea visualmente */
 .poem-text {
-  display: block;
-
-  min-height: 58px;
-  height: auto;
-
-  padding: 0;
-  margin: 0;
-
+  width: 100%;
   border: none;
-
-  resize: none;
-
-  overflow: hidden;
+  outline: none;
+  background: transparent;
 
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 1.2rem;
   line-height: 29px;
 
   white-space: pre-wrap;
-  overflow-wrap: break-word;
+  word-break: break-word;
 
-  touch-action: auto;
-}
-
-@media (max-width: 700px) {
-  .poems-section {
-    padding: 128px 18px 150px;
-  }
-
-  .poems-board {
-    gap: 20px;
-  }
-
-  .poems-notepad {
-    padding: 20px 18px 24px;
-  }
-
-  .poem-text {
-    font-size: 1.1rem;
-  }
+  color: #2f2a24;
 }
