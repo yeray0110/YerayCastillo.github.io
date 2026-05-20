@@ -262,11 +262,6 @@ function renderVersicle(verse) {
   app.elements.versicleBox.append(title, content);
 }
 
-/**
- * Loads starter poems from data/poems.json, then prefers locally saved edits.
- * Static GitHub Pages cannot write back to JSON files, so browser edits are
- * persisted in localStorage.
- */
 async function loadPoems() {
   const savedPoems = localStorage.getItem(app.poemsStorageKey);
 
@@ -291,9 +286,6 @@ async function loadPoems() {
   savePoems();
 }
 
-/**
- * Keeps exactly one blank poem available for writing.
- */
 function normalisePoems() {
   const filledPoems = app.poems.filter(
     (poem) => poem.content.trim()
@@ -314,55 +306,41 @@ function savePoems() {
 }
 
 function renderPoems() {
-  app.elements.poemsBoard.replaceChildren();
+  app.elements.poemsBoard.innerHTML = '';
 
   app.poems.forEach((poem) => {
-    app.elements.poemsBoard.appendChild(
-      createPoemNotepad(poem)
-    );
+    const note = createPoemNotepad(poem);
+
+    app.elements.poemsBoard.appendChild(note);
   });
 }
 
-/**
- * Creates one editable growing notepad.
- */
 function createPoemNotepad(poem) {
   const article = document.createElement('article');
   const dateInput = document.createElement('input');
   const textArea = document.createElement('textarea');
 
   article.className = 'poems-notepad';
-  article.dataset.poemId = poem.id;
 
   dateInput.className = 'poem-date';
   dateInput.type = 'date';
   dateInput.value = poem.date;
 
-  dateInput.setAttribute(
-    'aria-label',
-    'Poem date'
-  );
-
   textArea.className = 'poem-text';
   textArea.value = poem.content;
 
   textArea.rows = 1;
-  textArea.wrap = 'soft';
-
-  textArea.spellcheck = false;
-
-  textArea.setAttribute(
-    'aria-label',
-    'Poem text'
-  );
 
   const resize = () => {
-    textArea.style.height = 'auto';
-    textArea.style.height =
-      `${textArea.scrollHeight}px`;
+    textArea.style.height = '0px';
+    textArea.style.height = textArea.scrollHeight + 'px';
   };
 
   resize();
+
+  requestAnimationFrame(resize);
+
+  setTimeout(resize, 0);
 
   textArea.addEventListener('input', () => {
     poem.content = textArea.value;
@@ -371,13 +349,15 @@ function createPoemNotepad(poem) {
 
     savePoems();
 
-    const isLastPoem =
+    const isLast =
       poem === app.poems[app.poems.length - 1];
 
-    if (isLastPoem && poem.content.trim()) {
+    if (isLast && poem.content.trim()) {
       addBlankPoem();
     }
   });
+
+  window.addEventListener('resize', resize);
 
   dateInput.addEventListener('input', () => {
     poem.date = dateInput.value;
@@ -387,14 +367,9 @@ function createPoemNotepad(poem) {
 
   article.append(dateInput, textArea);
 
-  requestAnimationFrame(resize);
-
   return article;
 }
 
-/**
- * Adds another empty poem at the bottom.
- */
 function addBlankPoem() {
   const lastPoem =
     app.poems[app.poems.length - 1];
@@ -412,8 +387,7 @@ function addBlankPoem() {
 
   savePoems();
 
-  const note =
-    createPoemNotepad(poem);
+  const note = createPoemNotepad(poem);
 
   app.elements.poemsBoard.appendChild(note);
 }
