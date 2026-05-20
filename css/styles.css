@@ -4,11 +4,8 @@
 
 html,
 body {
-  min-height: 100%;
   margin: 0;
-}
-
-body {
+  padding-top: 20px;
   overflow: hidden;
   font-family: Arial, sans-serif;
 }
