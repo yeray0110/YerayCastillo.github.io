@@ -265,21 +265,20 @@ function renderVersicle(verse) {
 
 
 
-async function loadPoems() {
-  const savedPoems = localStorage.getItem(app.poemsStorageKey);
 
-  if (savedPoems) {
-    app.poems = JSON.parse(savedPoems);
+
+async function loadPoems() {
+  const saved = localStorage.getItem(app.poemsStorageKey);
+
+  if (saved) {
+    app.poems = JSON.parse(saved);
     normalisePoems();
     savePoems();
     return;
   }
 
-  const response = await fetch(app.poemsPath);
-
-  if (!response.ok) throw new Error("Could not load poems");
-
-  app.poems = await response.json();
+  const res = await fetch(app.poemsPath);
+  app.poems = await res.json();
 
   normalisePoems();
   savePoems();
@@ -308,8 +307,13 @@ function renderPoems() {
 }
 
 /**
- * Poem grows automatically as text grows
+ * 🔥 FIX REAL: auto height textarea (NO CUTTING)
  */
+function autoResize(textarea) {
+  textarea.style.height = "auto";
+  textarea.style.height = textarea.scrollHeight + "px";
+}
+
 function createPoem(poem) {
   const article = document.createElement("article");
   article.className = "poems-notepad";
@@ -319,28 +323,36 @@ function createPoem(poem) {
   date.className = "poem-date";
   date.value = poem.date;
 
-  const text = document.createElement("div");
+  const text = document.createElement("textarea");
   text.className = "poem-text";
-  text.contentEditable = true;
-  text.innerText = poem.content;
+  text.value = poem.content;
+  text.rows = 1;
 
-  const update = () => {
-    poem.content = text.innerText;
+  const resize = () => autoResize(text);
+
+  requestAnimationFrame(resize);
+
+  text.addEventListener("input", () => {
+    poem.content = text.value;
+
+    resize();
+
     savePoems();
 
-    const isLast = poem === app.poems[app.poems.length - 1];
+    const isLast =
+      poem === app.poems[app.poems.length - 1];
 
     if (isLast && poem.content.trim()) {
       addBlankPoem();
     }
-  };
-
-  text.addEventListener("input", update);
+  });
 
   date.addEventListener("input", () => {
     poem.date = date.value;
     savePoems();
   });
+
+  window.addEventListener("resize", resize);
 
   article.append(date, text);
 

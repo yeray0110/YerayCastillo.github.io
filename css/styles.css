@@ -437,38 +437,17 @@ body {
     inset 0 0 0 1px #e6e2d8;
 }
 
-.poems-notepad::before {
-  content: "";
-  position: absolute;
-  top: 62px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 28px,
-    #e8e4da 29px,
-    #e8e4da 30px
-  );
-
-  pointer-events: none;
-}
-
 .poem-date {
   width: 100%;
   border: none;
-  outline: none;
   background: transparent;
+  outline: none;
 
   margin-bottom: 14px;
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   font-size: 0.95rem;
-  color: #2f2a24;
 }
 
-/* 🔥 esto YA NO es textarea visualmente */
 .poem-text {
   width: 100%;
   border: none;
@@ -479,8 +458,9 @@ body {
   font-size: 1.2rem;
   line-height: 29px;
 
+  resize: none;
+  overflow: hidden;
+
   white-space: pre-wrap;
   word-break: break-word;
-
-  color: #2f2a24;
 }
