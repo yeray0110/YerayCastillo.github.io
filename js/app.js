@@ -389,12 +389,22 @@ function createPoem(poem) {
   text.addEventListener('input', () => {
     poem.content = text.value;
     autoResize(text);
+
     if (poem.isDraft && poem.content.trim()) {
       poem.isDraft = false;
       poem.isNew = true;
       article.classList.remove('poem-draft');
       addBlankPoem();
     }
+
+    // A cleared note should disappear instead of leaving spare empty cards.
+    // The one dedicated draft stays ready for the next poem.
+    if (!poem.isDraft && !poem.content.trim()) {
+      window.clearTimeout(app.poemSyncTimers.get(poem.id));
+      void removeEmptyPoem(poem, article);
+      return;
+    }
+
     queuePoemSave(poem, article);
   });
 
@@ -428,7 +438,7 @@ async function syncPoem(poem, article) {
 
   try {
     const response = await fetch(endpoint, {
-      method: poem.isDraft ? 'POST' : 'PATCH',
+      method: poem.isNew ? 'POST' : 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });

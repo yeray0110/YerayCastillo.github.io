@@ -89,7 +89,7 @@ body {
   align-content: center;
   justify-items: center;
   gap: clamp(18px, 3vh, 34px);
-  padding: clamp(56px, 9vh, 96px) 20px clamp(32px, 7vh, 72px);
+  padding: clamp(36px, 5vh, 58px) 20px clamp(70px, 11vh, 112px);
 }
 
 .main-title {
@@ -147,7 +147,7 @@ body {
 @media (max-width: 480px) {
   .home-section {
     align-content: center;
-    padding-inline: 24px;
+    padding: 34px 24px 92px;
   }
 
   .main-title {

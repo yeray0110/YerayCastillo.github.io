@@ -7,7 +7,16 @@ const idPattern = /^[a-zA-Z0-9-]{1,80}$/;
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (!url.pathname.startsWith('/api/poems')) return env.ASSETS.fetch(request);
+    if (!url.pathname.startsWith('/api/poems')) {
+      // The worker asset binding needs an explicit file for the site root.
+      // Keep normal asset paths untouched so styles, sections and images load
+      // from the same published build.
+      if (url.pathname === '/') {
+        url.pathname = '/index.html';
+        return env.ASSETS.fetch(new Request(url, request));
+      }
+      return env.ASSETS.fetch(request);
+    }
 
     if (!env.DB) return json({ error: 'Poem storage is unavailable.' }, 503);
 
