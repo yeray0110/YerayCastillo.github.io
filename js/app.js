@@ -2,7 +2,7 @@ const app = {
   biblePath: 'RVR1960-Spanish.json',
   poemsPath: 'data/poems.json',
   poemsStorageKey: 'our-web-poems',
-  anniversaryDate: new Date(Date.UTC(2026, 4, 19, 0, 0, 0)),
+  anniversaryDate: getNextAnniversaryDate(),
   countdownIntervalId: null,
   flattenedBibleVerses: null,
   poems: [],
@@ -152,11 +152,17 @@ function stopLiveCountdown() {
 }
 
 function updateCountdownTimer() {
-  const millisecondsLeft = app.anniversaryDate - new Date();
+  const now = new Date();
+  const millisecondsLeft = app.anniversaryDate - now;
+
+  if (isAnniversaryDay(now)) {
+    app.elements.countdownTimer.textContent = 'Happy Anniversary! 🎉';
+    return;
+  }
 
   if (millisecondsLeft <= 0) {
-    stopLiveCountdown();
-    app.elements.countdownTimer.textContent = 'Happy Anniversary! 🎉';
+    app.anniversaryDate = getNextAnniversaryDate(now);
+    updateCountdownTimer();
     return;
   }
 
@@ -173,6 +179,22 @@ function updateCountdownTimer() {
     `${hours} ${pluralise('hour', hours)}, ` +
     `${minutes} ${pluralise('minute', minutes)}, ` +
     `${seconds} ${pluralise('second', seconds)} left.`;
+}
+
+/**
+ * Returns the coming 19 November, so the countdown renews automatically
+ * every year instead of remaining on an expired date.
+ */
+function getNextAnniversaryDate(now = new Date()) {
+  const anniversary = new Date(now.getFullYear(), 10, 19, 0, 0, 0, 0);
+  if (now > anniversary && !isAnniversaryDay(now)) {
+    anniversary.setFullYear(anniversary.getFullYear() + 1);
+  }
+  return anniversary;
+}
+
+function isAnniversaryDay(date) {
+  return date.getMonth() === 10 && date.getDate() === 19;
 }
 
 function pluralise(word, number) {
