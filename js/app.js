@@ -6,6 +6,7 @@ const app = {
   countdownIntervalId: null,
   flattenedBibleVerses: null,
   poems: [],
+  poemSyncTimers: new Map(),
   elements: {}
 };
 
@@ -29,7 +30,6 @@ async function initialisePage() {
   bindNavigation();
   await loadPoems();
   renderPoems();
-  observePoemScrollEnd();
 }
 
 /**
@@ -58,7 +58,6 @@ function cacheElements() {
     countdownTimer: document.getElementById('countdown-timer'),
     versicleBox: document.getElementById('versicle-box'),
     poemsBoard: document.getElementById('poems-board'),
-    poemScrollSentinel: document.getElementById('poem-scroll-sentinel'),
 
     sections: {
       timer: document.getElementById('timer-section'),
@@ -290,114 +289,185 @@ function renderVersicle(verse) {
 
 
 async function loadPoems() {
-  const saved = localStorage.getItem(app.poemsStorageKey);
+  const legacyPoems = readLegacyPoems();
 
-  if (saved) {
-    app.poems = JSON.parse(saved);
-    normalisePoems();
-    savePoems();
-    return;
+  try {
+    let poems = await fetchPoems();
+
+    if (!poems.length) {
+      await importPoems(await fetchStarterPoems());
+      poems = await fetchPoems();
+    }
+
+    if (legacyPoems.length) {
+      await importPoems(legacyPoems);
+      localStorage.removeItem(app.poemsStorageKey);
+      poems = await fetchPoems();
+    }
+
+    app.poems = poems;
+  } catch (error) {
+    console.error('Poems could not be loaded from storage:', error);
+    app.poems = await fetchStarterPoems();
   }
 
-  const res = await fetch(app.poemsPath);
-  app.poems = await res.json();
-
   normalisePoems();
-  savePoems();
+}
+
+async function fetchPoems() {
+  const response = await fetch('/api/poems', { cache: 'no-store' });
+  if (!response.ok) throw new Error('Poems request failed');
+  const data = await response.json();
+  return Array.isArray(data.poems) ? data.poems : [];
+}
+
+async function fetchStarterPoems() {
+  const response = await fetch(app.poemsPath);
+  if (!response.ok) throw new Error('Starter poems request failed');
+  return response.json();
+}
+
+function readLegacyPoems() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(app.poemsStorageKey) || '[]');
+    return Array.isArray(saved) ? saved.filter(isFilledPoem) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function importPoems(poems) {
+  const filled = poems.filter(isFilledPoem);
+  if (!filled.length) return;
+
+  const response = await fetch('/api/poems/import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ poems: filled }),
+  });
+  if (!response.ok) throw new Error('Poems import failed');
+}
+
+function isFilledPoem(poem) {
+  return poem && typeof poem.id === 'string' && typeof poem.date === 'string' && typeof poem.content === 'string' && poem.content.trim();
 }
 
 function normalisePoems() {
-  const filled = app.poems.filter(p => p.content.trim());
-
-  const blank =
-    app.poems.find(p => !p.content.trim()) ||
-    createBlankPoem();
-
-  app.poems = [...filled, blank];
-}
-
-function savePoems() {
-  localStorage.setItem(app.poemsStorageKey, JSON.stringify(app.poems));
+  const savedPoems = app.poems.filter(isFilledPoem).map((poem) => ({ ...poem, isDraft: false }));
+  app.poems = [...savedPoems, createBlankPoem()];
 }
 
 function renderPoems() {
-  app.elements.poemsBoard.innerHTML = "";
-
-  app.poems.forEach(poem => {
-    app.elements.poemsBoard.appendChild(createPoem(poem));
-  });
+  app.elements.poemsBoard.replaceChildren(...app.poems.map(createPoem));
 }
 
-/**
- * 🔥 FIX REAL: auto height textarea (NO CUTTING)
- */
 function autoResize(textarea) {
-  textarea.style.height = "auto";
-  textarea.style.height = textarea.scrollHeight + "px";
+  textarea.style.height = 'auto';
+  textarea.style.height = `${textarea.scrollHeight}px`;
 }
 
 function createPoem(poem) {
-  const article = document.createElement("article");
-  article.className = "poems-notepad";
+  const article = document.createElement('article');
+  article.className = 'poems-notepad';
+  if (poem.isDraft) article.classList.add('poem-draft');
 
-  const date = document.createElement("input");
-  date.type = "date";
-  date.className = "poem-date";
+  const date = document.createElement('input');
+  date.type = 'date';
+  date.className = 'poem-date';
   date.value = poem.date;
+  date.setAttribute('aria-label', 'Poem date');
 
-  const text = document.createElement("textarea");
-  text.className = "poem-text";
+  const text = document.createElement('textarea');
+  text.className = 'poem-text';
   text.value = poem.content;
   text.rows = 1;
+  text.placeholder = 'Write a new poem…';
+  text.setAttribute('aria-label', 'Poem text');
 
-  const resize = () => autoResize(text);
+  requestAnimationFrame(() => autoResize(text));
 
-  requestAnimationFrame(resize);
-
-  text.addEventListener("input", () => {
+  text.addEventListener('input', () => {
     poem.content = text.value;
-
-    resize();
-
-    savePoems();
-
-    const isLast =
-      poem === app.poems[app.poems.length - 1];
-
-    if (isLast && poem.content.trim()) {
+    autoResize(text);
+    if (poem.isDraft && poem.content.trim()) {
+      poem.isDraft = false;
+      poem.isNew = true;
+      article.classList.remove('poem-draft');
       addBlankPoem();
     }
+    queuePoemSave(poem, article);
   });
 
-  date.addEventListener("input", () => {
+  date.addEventListener('input', () => {
     poem.date = date.value;
-    savePoems();
+    if (poem.content.trim()) queuePoemSave(poem, article);
   });
-
-  window.addEventListener("resize", resize);
 
   article.append(date, text);
-
   return article;
 }
 
+function queuePoemSave(poem, article) {
+  window.clearTimeout(app.poemSyncTimers.get(poem.id));
+  const timer = window.setTimeout(() => void syncPoem(poem, article), 500);
+  app.poemSyncTimers.set(poem.id, timer);
+}
+
+async function syncPoem(poem, article) {
+  const content = poem.content.trim();
+
+  if (!content && !poem.isDraft) {
+    await removeEmptyPoem(poem, article);
+    return;
+  }
+
+  if (!content || poem.isSaving) return;
+  poem.isSaving = true;
+  const body = { id: poem.id, date: poem.date, content };
+  const endpoint = poem.isNew ? '/api/poems' : `/api/poems/${encodeURIComponent(poem.id)}`;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: poem.isDraft ? 'POST' : 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) throw new Error('Poem save failed');
+
+    poem.isNew = false;
+  } catch (error) {
+    console.error('Poem could not be saved:', error);
+  } finally {
+    poem.isSaving = false;
+    if (poem.content.trim() !== content) queuePoemSave(poem, article);
+  }
+}
+
+async function removeEmptyPoem(poem, article) {
+  try {
+    const response = await fetch(`/api/poems/${encodeURIComponent(poem.id)}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Poem delete failed');
+    app.poems = app.poems.filter((item) => item !== poem);
+    article.remove();
+    addBlankPoem();
+  } catch (error) {
+    console.error('Empty poem could not be removed:', error);
+  }
+}
+
 function addBlankPoem() {
-  const last = app.poems[app.poems.length - 1];
-
-  if (last && !last.content.trim()) return;
-
+  if (app.poems.some((poem) => poem.isDraft)) return;
   const poem = createBlankPoem();
-
   app.poems.push(poem);
-  savePoems();
-
   app.elements.poemsBoard.appendChild(createPoem(poem));
 }
 
 function createBlankPoem() {
   return {
-    id: `poem-${Date.now()}`,
+    id: crypto.randomUUID(),
     date: getLocalDateKey(new Date()),
-    content: ""
+    content: '',
+    isDraft: true,
+    isNew: false,
   };
 }
