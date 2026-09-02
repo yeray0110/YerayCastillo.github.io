@@ -109,7 +109,8 @@ body {
   margin: 0 auto;
 }
 
-.menu-buttons button {
+.menu-buttons button,
+.menu-buttons .menu-link {
   min-height: 52px;
   padding: 12px;
   border: 0;
@@ -118,6 +119,7 @@ body {
   color: #fff;
   cursor: pointer;
   font-size: 1.05rem;
+  text-decoration: none;
   transition: background-color 180ms ease, transform 180ms ease;
 }
 
@@ -125,7 +127,8 @@ body {
   min-height: 52px;
 }
 
-.menu-buttons button:hover {
+.menu-buttons button:hover,
+.menu-buttons .menu-link:hover {
   background-color: #ff7700;
   transform: translateY(-2px);
 }

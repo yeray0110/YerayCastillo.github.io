@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Una lista reutilizable para añadir ingredientes y crear tu compra automáticamente.">
+  <title>Mi lista de ingredientes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/lista-compra.css">
+</head>
+<body>
+  <main class="shopping-app">
+    <header class="app-header">
+      <a class="back-link" href="index.html" aria-label="Volver a la página principal">← Volver</a>
+      <div class="header-copy">
+        <p class="eyebrow">COMPRA SIN REPETIRTE</p>
+        <h1>Mi lista de ingredientes</h1>
+        <p>Guarda tus ingredientes una vez. Después, escribe solamente la cantidad.</p>
+      </div>
+      <div class="save-indicator" aria-live="polite">
+        <span class="save-dot" aria-hidden="true"></span>
+        Se guarda automáticamente
+      </div>
+    </header>
+
+    <section class="how-it-works" aria-label="Cómo usar la lista">
+      <span>1. Añade un ingrediente</span>
+      <span aria-hidden="true">→</span>
+      <span>2. Pon una cantidad</span>
+      <span aria-hidden="true">→</span>
+      <span>3. Llévate tu lista</span>
+    </section>
+
+    <div class="workspace">
+      <section class="ingredients-panel" aria-labelledby="ingredients-title">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">TU LISTA FIJA</p>
+            <h2 id="ingredients-title">Ingredientes</h2>
+          </div>
+          <span id="ingredient-count" class="count-pill">0 guardados</span>
+        </div>
+
+        <form id="add-ingredient-form" class="add-ingredient-form">
+          <label class="visually-hidden" for="ingredient-name">Nombre del ingrediente</label>
+          <input id="ingredient-name" name="ingredient-name" type="text" maxlength="60" placeholder="Ej. Huevos" autocomplete="off" required>
+          <label class="visually-hidden" for="ingredient-unit">Unidad</label>
+          <input id="ingredient-unit" name="ingredient-unit" type="text" maxlength="20" placeholder="Unidad (opcional)" autocomplete="off">
+          <button type="submit">Añadir</button>
+        </form>
+
+        <p class="form-help">La unidad puede ser “kg”, “cajas”, “botellas” o la que tú uses.</p>
+
+        <div id="ingredient-list" class="ingredient-list" aria-live="polite"></div>
+
+        <div class="panel-footer">
+          <button id="clear-quantities" class="text-button" type="button">Limpiar solo cantidades</button>
+          <button id="backup-button" class="text-button" type="button">Guardar copia</button>
+          <label class="text-button restore-label" for="restore-input">Restaurar copia</label>
+          <input id="restore-input" type="file" accept="application/json" hidden>
+        </div>
+      </section>
+
+      <aside class="shopping-panel" aria-labelledby="shopping-title">
+        <div class="shopping-heading">
+          <div>
+            <p class="section-kicker">PARA COMPRAR HOY</p>
+            <h2 id="shopping-title">Lista de compra</h2>
+          </div>
+          <button id="copy-list" class="copy-button" type="button" disabled>Copiar</button>
+        </div>
+
+        <div id="shopping-list" class="shopping-list" aria-live="polite"></div>
+        <p id="shopping-summary" class="shopping-summary">Añade una cantidad para empezar tu lista.</p>
+      </aside>
+    </div>
+
+    <template id="empty-ingredients-template">
+      <div class="empty-state">
+        <span class="empty-icon" aria-hidden="true">+</span>
+        <h3>Añade tu primer ingrediente</h3>
+        <p>Por ejemplo: huevos, leche, harina o tomates. Quedará aquí para la próxima compra.</p>
+      </div>
+    </template>
+
+    <template id="empty-shopping-template">
+      <div class="empty-shopping">
+        <span aria-hidden="true">⌁</span>
+        <p>Tu lista aparecerá aquí.</p>
+        <small>Solo se muestran los ingredientes con cantidad.</small>
+      </div>
+    </template>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="js/lista-compra.js"></script>
+</body>
+</html>
