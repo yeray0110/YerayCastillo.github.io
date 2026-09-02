@@ -10,6 +10,11 @@ const app = {
   elements: {}
 };
 
+const retiredStarterPoemIds = new Set([
+  'poem-2026-05-19-2',
+  'poem-2026-05-19-3',
+]);
+
 const sectionFiles = [
   'sections/timer.html',
   'sections/versicle.html',
@@ -305,7 +310,7 @@ async function loadPoems() {
       poems = await fetchPoems();
     }
 
-    app.poems = poems;
+    app.poems = await removeRetiredStarterPoems(poems);
   } catch (error) {
     console.error('Poems could not be loaded from storage:', error);
     app.poems = await fetchStarterPoems();
@@ -346,6 +351,25 @@ async function importPoems(poems) {
     body: JSON.stringify({ poems: filled }),
   });
   if (!response.ok) throw new Error('Poems import failed');
+}
+
+async function removeRetiredStarterPoems(poems) {
+  const retiredPoems = poems.filter((poem) => retiredStarterPoemIds.has(poem.id));
+  if (!retiredPoems.length) return poems;
+
+  try {
+    await Promise.all(
+      retiredPoems.map(async (poem) => {
+        const response = await fetch(`/api/poems/${encodeURIComponent(poem.id)}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Starter poem removal failed');
+      }),
+    );
+  } catch (error) {
+    console.error('Old starter poems could not be removed:', error);
+  }
+
+  // Never show retired examples again, even if the deletion has to retry later.
+  return poems.filter((poem) => !retiredStarterPoemIds.has(poem.id));
 }
 
 function isFilledPoem(poem) {
