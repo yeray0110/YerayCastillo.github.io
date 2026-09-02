@@ -1,6 +1,9 @@
 import { cp, mkdir, rm } from 'node:fs/promises';
 
-const outputDirectory = new URL('../dist/', import.meta.url);
+// Sites serves the client bundle from dist/client and the Worker from
+// dist/server. Keeping those outputs separate makes the static assets
+// available to the Worker in production as well as locally.
+const outputDirectory = new URL('../dist/client/', import.meta.url);
 const projectRoot = new URL('../', import.meta.url);
 const publishablePaths = [
   'index.html',
