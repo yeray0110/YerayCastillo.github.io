@@ -1,7 +1,32 @@
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+import {
+  getDatabase,
+  onValue,
+  ref,
+  set
+} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyCVMrnHy7S6B0fi4g5yforJupRVvSBgPNw',
+  authDomain: 'our-web19.firebaseapp.com',
+  databaseURL: 'https://our-web19-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId: 'our-web19',
+  storageBucket: 'our-web19.firebasestorage.app',
+  messagingSenderId: '554379671267',
+  appId: '1:554379671267:web:26b9ef61465fc4ff8ff7d6',
+  measurementId: 'G-YGH3E3VFR1'
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const database = getDatabase(firebaseApp);
+
 const ingredientStorageKey = 'mi-lista-de-ingredientes-v1';
 
 const appState = {
   ingredients: [],
+  ingredientsRef: ref(database, 'shoppingList/ingredients'),
+  hasMigratedLocalIngredients: false,
+  isSaving: false,
   elements: {},
   toastTimer: null
 };
@@ -26,8 +51,8 @@ function initialiseShoppingList() {
     emptyShopping: document.getElementById('empty-shopping-template')
   };
 
-  appState.ingredients = readIngredients();
   bindShoppingEvents();
+  listenIngredients();
   renderShoppingApp();
 }
 
@@ -42,29 +67,91 @@ function bindShoppingEvents() {
   appState.elements.restoreInput.addEventListener('change', restoreBackup);
 }
 
-function readIngredients() {
+function listenIngredients() {
+  onValue(
+    appState.ingredientsRef,
+    async (snapshot) => {
+      const remoteIngredients = normaliseRemoteIngredients(snapshot.val());
+
+      if (!remoteIngredients.length && !appState.hasMigratedLocalIngredients) {
+        const legacyIngredients = readLocalIngredients();
+        appState.hasMigratedLocalIngredients = true;
+
+        if (legacyIngredients.length) {
+          appState.ingredients = legacyIngredients;
+          await saveIngredients();
+          localStorage.removeItem(ingredientStorageKey);
+          return;
+        }
+      }
+
+      appState.ingredients = remoteIngredients;
+      renderShoppingApp();
+    },
+    (error) => {
+      console.error('The shopping list could not connect to Firebase.', error);
+      showToast('No se pudo conectar con Firebase.');
+    }
+  );
+}
+
+function readLocalIngredients() {
   try {
     const savedIngredients = JSON.parse(localStorage.getItem(ingredientStorageKey));
     if (!Array.isArray(savedIngredients)) return [];
 
-    return savedIngredients
-      .filter((ingredient) => ingredient && typeof ingredient.name === 'string')
-      .map((ingredient) => ({
-        id: typeof ingredient.id === 'string' ? ingredient.id : createId(),
-        name: ingredient.name.trim().slice(0, 60),
-        unit: typeof ingredient.unit === 'string' ? ingredient.unit.trim().slice(0, 20) : '',
-        quantity: normaliseQuantity(ingredient.quantity),
-        checked: Boolean(ingredient.checked)
-      }))
-      .filter((ingredient) => ingredient.name);
+    return normaliseIngredientArray(savedIngredients);
   } catch (error) {
     console.warn('The ingredient list could not be read.', error);
     return [];
   }
 }
 
-function saveIngredients() {
-  localStorage.setItem(ingredientStorageKey, JSON.stringify(appState.ingredients));
+function normaliseRemoteIngredients(value) {
+  return normaliseIngredientArray(Object.values(value || {}));
+}
+
+function normaliseIngredientArray(ingredients) {
+  return ingredients
+    .filter((ingredient) => ingredient && typeof ingredient.name === 'string')
+    .map((ingredient, index) => ({
+      id: typeof ingredient.id === 'string' ? ingredient.id : createId(),
+      name: ingredient.name.trim().slice(0, 60),
+      unit: typeof ingredient.unit === 'string' ? ingredient.unit.trim().slice(0, 20) : '',
+      quantity: normaliseQuantity(ingredient.quantity),
+      checked: Boolean(ingredient.checked),
+      order: Number.isFinite(Number(ingredient.order)) ? Number(ingredient.order) : index
+    }))
+    .filter((ingredient) => ingredient.name)
+    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+}
+
+function ingredientsToFirebaseObject() {
+  return appState.ingredients.reduce((firebaseIngredients, ingredient, index) => {
+    firebaseIngredients[ingredient.id] = {
+      id: ingredient.id,
+      name: ingredient.name,
+      unit: ingredient.unit,
+      quantity: ingredient.quantity,
+      checked: ingredient.checked,
+      order: Number.isFinite(Number(ingredient.order)) ? Number(ingredient.order) : index
+    };
+
+    return firebaseIngredients;
+  }, {});
+}
+
+async function saveIngredients() {
+  appState.isSaving = true;
+
+  try {
+    await set(appState.ingredientsRef, ingredientsToFirebaseObject());
+  } catch (error) {
+    console.error('The ingredient list could not be saved to Firebase.', error);
+    showToast('No se pudo guardar en Firebase.');
+  } finally {
+    appState.isSaving = false;
+  }
 }
 
 function addIngredient(event) {
@@ -74,7 +161,7 @@ function addIngredient(event) {
 
   if (!name) return;
 
-  appState.ingredients.push({ id: createId(), name, unit, quantity: '', checked: false });
+  appState.ingredients.push({ id: createId(), name, unit, quantity: '', checked: false, order: Date.now() });
   saveIngredients();
   appState.elements.addForm.reset();
   renderShoppingApp();
@@ -344,12 +431,13 @@ function restoreBackup(event) {
 function normaliseBackup(ingredients) {
   return ingredients
     .filter((ingredient) => ingredient && typeof ingredient.name === 'string')
-    .map((ingredient) => ({
+    .map((ingredient, index) => ({
       id: typeof ingredient.id === 'string' ? ingredient.id : createId(),
       name: ingredient.name.trim().slice(0, 60),
       unit: typeof ingredient.unit === 'string' ? ingredient.unit.trim().slice(0, 20) : '',
       quantity: normaliseQuantity(ingredient.quantity),
-      checked: Boolean(ingredient.checked)
+      checked: Boolean(ingredient.checked),
+      order: Number.isFinite(Number(ingredient.order)) ? Number(ingredient.order) : index
     }))
     .filter((ingredient) => ingredient.name);
 }
