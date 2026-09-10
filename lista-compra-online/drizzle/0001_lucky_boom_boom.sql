@@ -1,0 +1,2 @@
+ALTER TABLE `ingredients` ADD `provider` text DEFAULT 'breaks' NOT NULL;--> statement-breakpoint
+CREATE INDEX `idx_ingredients_list_provider_position` ON `ingredients` (`list_id`,`provider`,`position`);
