@@ -1,5 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
 import {
+  get,
   getDatabase,
   onValue,
   ref,
@@ -21,13 +22,21 @@ const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 
 const ingredientStorageKey = 'mi-lista-de-ingredientes-v1';
+const oldFirebaseIngredientsPath = 'shoppingList/ingredients';
+const providers = {
+  breaks: 'Breaks',
+  ocado: 'Ocado'
+};
 
 const appState = {
   ingredients: [],
-  ingredientsRef: ref(database, 'shoppingList/ingredients'),
+  provider: 'breaks',
+  ingredientsRef: null,
   hasMigratedLocalIngredients: false,
+  hasMigratedOldFirebase: false,
   isSaving: false,
   elements: {},
+  unsubscribeIngredients: null,
   toastTimer: null
 };
 
@@ -36,10 +45,14 @@ document.addEventListener('DOMContentLoaded', initialiseShoppingList);
 function initialiseShoppingList() {
   appState.elements = {
     addForm: document.getElementById('add-ingredient-form'),
+    supplierTabs: Array.from(document.querySelectorAll('[data-provider]')),
     nameInput: document.getElementById('ingredient-name'),
     unitInput: document.getElementById('ingredient-unit'),
+    addButton: document.getElementById('add-button'),
     ingredientList: document.getElementById('ingredient-list'),
     ingredientCount: document.getElementById('ingredient-count'),
+    providerKicker: document.getElementById('provider-kicker'),
+    shoppingKicker: document.getElementById('shopping-kicker'),
     shoppingList: document.getElementById('shopping-list'),
     shoppingSummary: document.getElementById('shopping-summary'),
     clearQuantities: document.getElementById('clear-quantities'),
@@ -52,12 +65,15 @@ function initialiseShoppingList() {
   };
 
   bindShoppingEvents();
-  listenIngredients();
+  setProvider(appState.provider);
   renderShoppingApp();
 }
 
 function bindShoppingEvents() {
   appState.elements.addForm.addEventListener('submit', addIngredient);
+  appState.elements.supplierTabs.forEach((tab) => {
+    tab.addEventListener('click', () => setProvider(tab.dataset.provider));
+  });
   appState.elements.ingredientList.addEventListener('input', updateQuantity);
   appState.elements.ingredientList.addEventListener('click', handleIngredientAction);
   appState.elements.shoppingList.addEventListener('change', toggleShoppingItem);
@@ -67,13 +83,49 @@ function bindShoppingEvents() {
   appState.elements.restoreInput.addEventListener('change', restoreBackup);
 }
 
+function setProvider(nextProvider) {
+  if (!providers[nextProvider]) return;
+
+  appState.provider = nextProvider;
+  appState.ingredients = [];
+  appState.ingredientsRef = ref(database, `shoppingList/lists/${nextProvider}/ingredients`);
+  updateProviderUi();
+  listenIngredients();
+  renderShoppingApp();
+}
+
+function updateProviderUi() {
+  const providerName = providers[appState.provider];
+  appState.elements.supplierTabs.forEach((tab) => {
+    const isActive = tab.dataset.provider === appState.provider;
+    tab.classList.toggle('is-active', isActive);
+    tab.setAttribute('aria-pressed', String(isActive));
+  });
+  appState.elements.providerKicker.textContent = `${providerName.toUpperCase()} LIST`;
+  appState.elements.shoppingKicker.textContent = `SHOPPING FOR ${providerName.toUpperCase()}`;
+  appState.elements.addButton.textContent = `Add to ${providerName}`;
+}
+
 function listenIngredients() {
-  onValue(
+  if (appState.unsubscribeIngredients) appState.unsubscribeIngredients();
+
+  appState.unsubscribeIngredients = onValue(
     appState.ingredientsRef,
     async (snapshot) => {
       const remoteIngredients = normaliseRemoteIngredients(snapshot.val());
 
-      if (!remoteIngredients.length && !appState.hasMigratedLocalIngredients) {
+      if (!remoteIngredients.length && appState.provider === 'breaks' && !appState.hasMigratedOldFirebase) {
+        const oldFirebaseIngredients = await readOldFirebaseIngredients();
+        appState.hasMigratedOldFirebase = true;
+
+        if (oldFirebaseIngredients.length) {
+          appState.ingredients = oldFirebaseIngredients;
+          await saveIngredients();
+          return;
+        }
+      }
+
+      if (!remoteIngredients.length && appState.provider === 'breaks' && !appState.hasMigratedLocalIngredients) {
         const legacyIngredients = readLocalIngredients();
         appState.hasMigratedLocalIngredients = true;
 
@@ -90,9 +142,19 @@ function listenIngredients() {
     },
     (error) => {
       console.error('The shopping list could not connect to Firebase.', error);
-      showToast('No se pudo conectar con Firebase.');
+      showToast('Could not connect to Firebase.');
     }
   );
+}
+
+async function readOldFirebaseIngredients() {
+  try {
+    const snapshot = await get(ref(database, oldFirebaseIngredientsPath));
+    return normaliseRemoteIngredients(snapshot.val());
+  } catch (error) {
+    console.warn('The old Firebase ingredient list could not be read.', error);
+    return [];
+  }
 }
 
 function readLocalIngredients() {
@@ -148,7 +210,7 @@ async function saveIngredients() {
     await set(appState.ingredientsRef, ingredientsToFirebaseObject());
   } catch (error) {
     console.error('The ingredient list could not be saved to Firebase.', error);
-    showToast('No se pudo guardar en Firebase.');
+    showToast('Could not save to Firebase.');
   } finally {
     appState.isSaving = false;
   }
@@ -166,7 +228,7 @@ function addIngredient(event) {
   appState.elements.addForm.reset();
   renderShoppingApp();
   appState.elements.nameInput.focus();
-  showToast(`${name} se ha guardado.`);
+  showToast(`${name} has been saved to ${providers[appState.provider]}.`);
 }
 
 function updateQuantity(event) {
@@ -194,41 +256,41 @@ function handleIngredientAction(event) {
 }
 
 function editIngredient(ingredient) {
-  const nextName = window.prompt('Nombre del ingrediente:', ingredient.name);
+  const nextName = window.prompt('Ingredient name:', ingredient.name);
   if (nextName === null) return;
   const name = nextName.trim();
   if (!name) {
-    showToast('El ingrediente necesita un nombre.');
+    showToast('An ingredient needs a name.');
     return;
   }
 
-  const nextUnit = window.prompt('Unidad (puede quedar vacía):', ingredient.unit);
+  const nextUnit = window.prompt('Unit (can stay empty):', ingredient.unit);
   if (nextUnit === null) return;
 
   ingredient.name = name.slice(0, 60);
   ingredient.unit = nextUnit.trim().slice(0, 20);
   saveIngredients();
   renderShoppingApp();
-  showToast('Ingrediente actualizado.');
+  showToast('Ingredient updated.');
 }
 
 function deleteIngredient(ingredient) {
-  if (!window.confirm(`¿Eliminar “${ingredient.name}”?`)) return;
+  if (!window.confirm(`Delete "${ingredient.name}"?`)) return;
 
   appState.ingredients = appState.ingredients.filter((item) => item.id !== ingredient.id);
   saveIngredients();
   renderShoppingApp();
-  showToast('Ingrediente eliminado.');
+  showToast('Ingredient deleted.');
 }
 
 function clearQuantities() {
   const hasQuantities = appState.ingredients.some((ingredient) => hasQuantity(ingredient.quantity));
   if (!hasQuantities) {
-    showToast('Todavía no hay cantidades que limpiar.');
+    showToast('There are no quantities to clear yet.');
     return;
   }
 
-  if (!window.confirm('Se limpiarán las cantidades de hoy. Tus ingredientes se conservarán.')) return;
+  if (!window.confirm('Only today\'s quantities will be cleared. Your ingredients will stay saved.')) return;
 
   appState.ingredients.forEach((ingredient) => {
     ingredient.quantity = '';
@@ -236,7 +298,7 @@ function clearQuantities() {
   });
   saveIngredients();
   renderShoppingApp();
-  showToast('Lista preparada para la próxima compra.');
+  showToast('Ready for the next shop.');
 }
 
 function toggleShoppingItem(event) {
@@ -258,7 +320,7 @@ function renderShoppingApp() {
 function renderIngredientList() {
   const { ingredientList, ingredientCount, emptyIngredients } = appState.elements;
   ingredientList.replaceChildren();
-  ingredientCount.textContent = `${appState.ingredients.length} ${appState.ingredients.length === 1 ? 'guardado' : 'guardados'}`;
+  ingredientCount.textContent = `${appState.ingredients.length} ${appState.ingredients.length === 1 ? 'saved item' : 'saved items'}`;
 
   if (!appState.ingredients.length) {
     ingredientList.append(emptyIngredients.content.cloneNode(true));
@@ -277,7 +339,7 @@ function renderIngredientList() {
     name.title = ingredient.name;
     const unit = document.createElement('span');
     unit.className = 'ingredient-unit';
-    unit.textContent = ingredient.unit || 'Sin unidad';
+    unit.textContent = ingredient.unit || 'No unit';
     nameWrap.append(name, unit);
 
     const quantity = document.createElement('input');
@@ -294,8 +356,8 @@ function renderIngredientList() {
     const actions = document.createElement('div');
     actions.className = 'row-actions';
     actions.append(
-      createActionButton('editar', ingredient.id, 'Editar ingrediente', '✎'),
-      createActionButton('delete', ingredient.id, 'Eliminar ingrediente', '×')
+      createActionButton('edit', ingredient.id, 'Edit ingredient', '✎'),
+      createActionButton('delete', ingredient.id, 'Delete ingredient', '×')
     );
 
     row.append(nameWrap, quantity, actions);
@@ -312,8 +374,8 @@ function renderShoppingList() {
   if (!selectedIngredients.length) {
     shoppingList.append(emptyShopping.content.cloneNode(true));
     shoppingSummary.textContent = appState.ingredients.length
-      ? 'Añade una cantidad para incluir un ingrediente.'
-      : 'Añade tus ingredientes habituales para empezar.';
+      ? `Add a quantity to include an ingredient in ${providers[appState.provider]}.`
+      : `Add your usual ${providers[appState.provider]} ingredients to begin.`;
     return;
   }
 
@@ -342,8 +404,8 @@ function renderShoppingList() {
 
   const boughtCount = selectedIngredients.filter((ingredient) => ingredient.checked).length;
   shoppingSummary.textContent = boughtCount
-    ? `${boughtCount} de ${selectedIngredients.length} marcados como comprados.`
-    : `${selectedIngredients.length} ${selectedIngredients.length === 1 ? 'ingrediente' : 'ingredientes'} en la lista.`;
+    ? `${boughtCount} of ${selectedIngredients.length} marked as bought.`
+    : `${selectedIngredients.length} ${selectedIngredients.length === 1 ? 'ingredient' : 'ingredients'} in the ${providers[appState.provider]} list.`;
 }
 
 function createActionButton(action, id, label, text) {
@@ -363,10 +425,10 @@ async function copyShoppingList() {
 
   try {
     await navigator.clipboard.writeText(text);
-    showToast('Lista copiada.');
+    showToast('Shopping list copied.');
   } catch (error) {
     fallbackCopy(text);
-    showToast('Lista copiada.');
+    showToast('Shopping list copied.');
   }
 }
 
@@ -374,7 +436,7 @@ function buildShoppingText() {
   const selectedIngredients = appState.ingredients.filter((ingredient) => hasQuantity(ingredient.quantity));
   if (!selectedIngredients.length) return '';
 
-  return ['Lista de compra', '', ...selectedIngredients.map((ingredient) => `• ${formatQuantity(ingredient.quantity, ingredient.unit)} · ${ingredient.name}`)].join('\n');
+  return [`${providers[appState.provider]} shopping list`, '', ...selectedIngredients.map((ingredient) => `• ${formatQuantity(ingredient.quantity, ingredient.unit)} · ${ingredient.name}`)].join('\n');
 }
 
 function fallbackCopy(text) {
@@ -390,17 +452,17 @@ function fallbackCopy(text) {
 }
 
 function downloadBackup() {
-  const backup = JSON.stringify({ version: 1, ingredients: appState.ingredients }, null, 2);
+  const backup = JSON.stringify({ version: 2, provider: appState.provider, ingredients: appState.ingredients }, null, 2);
   const blob = new Blob([backup], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'mi-lista-de-ingredientes.json';
+  link.download = `${appState.provider}-shopping-list.json`;
   document.body.append(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  showToast('Copia guardada en tu dispositivo.');
+  showToast('Backup downloaded.');
 }
 
 function restoreBackup(event) {
@@ -413,13 +475,13 @@ function restoreBackup(event) {
       const backup = JSON.parse(reader.result);
       if (!backup || !Array.isArray(backup.ingredients)) throw new Error('Invalid backup');
 
-      if (!window.confirm('La copia sustituirá la lista actual. ¿Continuar?')) return;
+      if (!window.confirm(`This backup will replace the current ${providers[appState.provider]} list. Continue?`)) return;
       appState.ingredients = normaliseBackup(backup.ingredients);
       saveIngredients();
       renderShoppingApp();
-      showToast('Copia restaurada.');
+      showToast('Backup restored.');
     } catch (error) {
-      showToast('No se pudo leer esa copia.');
+      showToast('That backup could not be read.');
     } finally {
       event.target.value = '';
     }
@@ -463,7 +525,7 @@ function hasQuantity(value) {
 
 function formatQuantity(quantity, unit) {
   const number = Number(quantity);
-  const formattedNumber = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 3 }).format(number);
+  const formattedNumber = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 3 }).format(number);
   return unit ? `${formattedNumber} ${unit}` : formattedNumber;
 }
 
