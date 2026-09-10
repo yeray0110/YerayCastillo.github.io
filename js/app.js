@@ -344,8 +344,10 @@ function normaliseRemotePoems(value) {
     }))
     .filter((poem) => poem.content.trim())
     .sort((a, b) => {
-      const createdDifference = Number(a.createdAt || 0) - Number(b.createdAt || 0);
-      return createdDifference || a.firebaseKey.localeCompare(b.firebaseKey);
+      const dateDifference = b.date.localeCompare(a.date);
+      const updatedDifference = Number(b.updatedAt || 0) - Number(a.updatedAt || 0);
+
+      return dateDifference || updatedDifference || b.firebaseKey.localeCompare(a.firebaseKey);
     });
 
   return [...savedPoems, createBlankPoem()];
