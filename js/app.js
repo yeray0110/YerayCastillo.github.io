@@ -1,19 +1,39 @@
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+import {
+  getDatabase,
+  onValue,
+  push,
+  ref,
+  remove,
+  serverTimestamp,
+  set,
+  update
+} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyCVMrnHy7S6B0fi4g5yforJupRVvSBgPNw',
+  authDomain: 'our-web19.firebaseapp.com',
+  databaseURL: 'https://our-web19-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId: 'our-web19',
+  storageBucket: 'our-web19.firebasestorage.app',
+  messagingSenderId: '554379671267',
+  appId: '1:554379671267:web:26b9ef61465fc4ff8ff7d6',
+  measurementId: 'G-YGH3E3VFR1'
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const database = getDatabase(firebaseApp);
+
 const app = {
   biblePath: 'RVR1960-Spanish.json',
-  poemsPath: 'data/poems.json',
-  poemsStorageKey: 'our-web-poems',
   anniversaryDate: getNextAnniversaryDate(),
   countdownIntervalId: null,
   flattenedBibleVerses: null,
   poems: [],
+  poemsRef: ref(database, 'poems'),
   poemSyncTimers: new Map(),
   elements: {}
 };
-
-const retiredStarterPoemIds = new Set([
-  'poem-2026-05-19-2',
-  'poem-2026-05-19-3',
-]);
 
 const sectionFiles = [
   'sections/timer.html',
@@ -33,8 +53,7 @@ async function initialisePage() {
   await loadSectionPartials();
   cacheElements();
   bindNavigation();
-  await loadPoems();
-  renderPoems();
+  loadPoems();
 }
 
 /**
@@ -293,96 +312,82 @@ function renderVersicle(verse) {
 
 
 
-async function loadPoems() {
-  const legacyPoems = readLegacyPoems();
+function loadPoems() {
+  showPoemsStatus('Loading poems...');
 
-  try {
-    let poems = await fetchPoems();
-
-    if (!poems.length) {
-      await importPoems(await fetchStarterPoems());
-      poems = await fetchPoems();
+  onValue(
+    app.poemsRef,
+    (snapshot) => {
+      app.poems = normaliseRemotePoems(snapshot.val());
+      renderPoems();
+    },
+    (error) => {
+      console.error('Firebase poems listener failed:', error);
+      showPoemsStatus('Poems cannot load yet. Check the Firebase Realtime Database rules.');
     }
-
-    if (legacyPoems.length) {
-      await importPoems(legacyPoems);
-      localStorage.removeItem(app.poemsStorageKey);
-      poems = await fetchPoems();
-    }
-
-    app.poems = await removeRetiredStarterPoems(poems);
-  } catch (error) {
-    console.error('Poems could not be loaded from storage:', error);
-    app.poems = await fetchStarterPoems();
-  }
-
-  normalisePoems();
+  );
 }
 
-async function fetchPoems() {
-  const response = await fetch('/api/poems', { cache: 'no-store' });
-  if (!response.ok) throw new Error('Poems request failed');
-  const data = await response.json();
-  return Array.isArray(data.poems) ? data.poems : [];
-}
+/**
+ * Firebase stores poems as an object keyed by database id. This turns it into
+ * a sorted array and always adds exactly one local blank notepad at the end.
+ */
+function normaliseRemotePoems(value) {
+  const savedPoems = Object.entries(value || {})
+    .map(([firebaseKey, poem]) => ({
+      firebaseKey,
+      date: typeof poem.date === 'string' ? poem.date : getLocalDateKey(new Date()),
+      content: typeof poem.content === 'string' ? poem.content : '',
+      createdAt: poem.createdAt || 0,
+      updatedAt: poem.updatedAt || 0,
+      isDraft: false
+    }))
+    .filter((poem) => poem.content.trim())
+    .sort((a, b) => {
+      const createdDifference = Number(a.createdAt || 0) - Number(b.createdAt || 0);
+      return createdDifference || a.firebaseKey.localeCompare(b.firebaseKey);
+    });
 
-async function fetchStarterPoems() {
-  const response = await fetch(app.poemsPath);
-  if (!response.ok) throw new Error('Starter poems request failed');
-  return response.json();
-}
-
-function readLegacyPoems() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(app.poemsStorageKey) || '[]');
-    return Array.isArray(saved) ? saved.filter(isFilledPoem) : [];
-  } catch {
-    return [];
-  }
-}
-
-async function importPoems(poems) {
-  const filled = poems.filter(isFilledPoem);
-  if (!filled.length) return;
-
-  const response = await fetch('/api/poems/import', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ poems: filled }),
-  });
-  if (!response.ok) throw new Error('Poems import failed');
-}
-
-async function removeRetiredStarterPoems(poems) {
-  const retiredPoems = poems.filter((poem) => retiredStarterPoemIds.has(poem.id));
-  if (!retiredPoems.length) return poems;
-
-  try {
-    await Promise.all(
-      retiredPoems.map(async (poem) => {
-        const response = await fetch(`/api/poems/${encodeURIComponent(poem.id)}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Starter poem removal failed');
-      }),
-    );
-  } catch (error) {
-    console.error('Old starter poems could not be removed:', error);
-  }
-
-  // Never show retired examples again, even if the deletion has to retry later.
-  return poems.filter((poem) => !retiredStarterPoemIds.has(poem.id));
-}
-
-function isFilledPoem(poem) {
-  return poem && typeof poem.id === 'string' && typeof poem.date === 'string' && typeof poem.content === 'string' && poem.content.trim();
-}
-
-function normalisePoems() {
-  const savedPoems = app.poems.filter(isFilledPoem).map((poem) => ({ ...poem, isDraft: false }));
-  app.poems = [...savedPoems, createBlankPoem()];
+  return [...savedPoems, createBlankPoem()];
 }
 
 function renderPoems() {
+  const focusedKey = document.activeElement?.closest?.('.poems-notepad')?.dataset.poemKey;
+  const focusedSelection = getFocusedTextareaSelection();
+
   app.elements.poemsBoard.replaceChildren(...app.poems.map(createPoem));
+
+  restoreFocusedTextarea(focusedKey, focusedSelection);
+}
+
+function showPoemsStatus(message) {
+  app.elements.poemsBoard.replaceChildren();
+
+  const status = document.createElement('p');
+  status.className = 'poems-status';
+  status.textContent = message;
+  app.elements.poemsBoard.append(status);
+}
+
+function getFocusedTextareaSelection() {
+  if (!document.activeElement?.classList?.contains('poem-text')) return null;
+
+  return {
+    start: document.activeElement.selectionStart,
+    end: document.activeElement.selectionEnd
+  };
+}
+
+function restoreFocusedTextarea(poemKey, selection) {
+  if (!poemKey) return;
+
+  const textarea = app.elements.poemsBoard.querySelector(`[data-poem-key="${poemKey}"] .poem-text`);
+  if (!textarea) return;
+
+  textarea.focus();
+  if (selection) {
+    textarea.setSelectionRange(selection.start, selection.end);
+  }
 }
 
 function autoResize(textarea) {
@@ -393,6 +398,7 @@ function autoResize(textarea) {
 function createPoem(poem) {
   const article = document.createElement('article');
   article.className = 'poems-notepad';
+  article.dataset.poemKey = poem.firebaseKey;
   if (poem.isDraft) article.classList.add('poem-draft');
 
   const date = document.createElement('input');
@@ -405,7 +411,7 @@ function createPoem(poem) {
   text.className = 'poem-text';
   text.value = poem.content;
   text.rows = 1;
-  text.placeholder = 'Write a new poem…';
+  text.placeholder = 'Write a new poem...';
   text.setAttribute('aria-label', 'Poem text');
 
   requestAnimationFrame(() => autoResize(text));
@@ -415,93 +421,119 @@ function createPoem(poem) {
     autoResize(text);
 
     if (poem.isDraft && poem.content.trim()) {
-      poem.isDraft = false;
-      poem.isNew = true;
-      article.classList.remove('poem-draft');
-      addBlankPoem();
-    }
-
-    // A cleared note should disappear instead of leaving spare empty cards.
-    // The one dedicated draft stays ready for the next poem.
-    if (!poem.isDraft && !poem.content.trim()) {
-      window.clearTimeout(app.poemSyncTimers.get(poem.id));
-      void removeEmptyPoem(poem, article);
+      void promoteDraftPoem(poem, article);
       return;
     }
 
-    queuePoemSave(poem, article);
+    if (!poem.isDraft && !poem.content.trim()) {
+      window.clearTimeout(app.poemSyncTimers.get(poem.firebaseKey));
+      void removePoem(poem);
+      return;
+    }
+
+    queuePoemSave(poem);
   });
 
   date.addEventListener('input', () => {
-    poem.date = date.value;
-    if (poem.content.trim()) queuePoemSave(poem, article);
+    poem.date = date.value || getLocalDateKey(new Date());
+
+    if (poem.isDraft && poem.content.trim()) {
+      void promoteDraftPoem(poem, article);
+      return;
+    }
+
+    if (!poem.isDraft) queuePoemSave(poem);
   });
 
   article.append(date, text);
   return article;
 }
 
-function queuePoemSave(poem, article) {
-  window.clearTimeout(app.poemSyncTimers.get(poem.id));
-  const timer = window.setTimeout(() => void syncPoem(poem, article), 500);
-  app.poemSyncTimers.set(poem.id, timer);
+async function promoteDraftPoem(poem, article) {
+  if (poem.isSaving || !poem.content.trim()) return;
+
+  poem.isSaving = true;
+  const newPoemRef = push(app.poemsRef);
+  poem.firebaseKey = newPoemRef.key;
+  poem.isDraft = false;
+  article.dataset.poemKey = poem.firebaseKey;
+  article.classList.remove('poem-draft');
+
+  addBlankPoem();
+
+  try {
+    await set(newPoemRef, {
+      date: poem.date || getLocalDateKey(new Date()),
+      content: poem.content.trimEnd(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Poem could not be created in Firebase:', error);
+    showPoemsStatus('The poem could not be saved. Check Firebase rules and try again.');
+  } finally {
+    poem.isSaving = false;
+  }
 }
 
-async function syncPoem(poem, article) {
-  const content = poem.content.trim();
+function queuePoemSave(poem) {
+  if (poem.isDraft || !poem.firebaseKey) return;
 
-  if (!content && !poem.isDraft) {
-    await removeEmptyPoem(poem, article);
+  window.clearTimeout(app.poemSyncTimers.get(poem.firebaseKey));
+  const timer = window.setTimeout(() => void syncPoem(poem), 650);
+  app.poemSyncTimers.set(poem.firebaseKey, timer);
+}
+
+async function syncPoem(poem) {
+  if (poem.isDraft || poem.isSaving || !poem.firebaseKey) return;
+
+  const content = poem.content.trimEnd();
+  if (!content.trim()) {
+    await removePoem(poem);
     return;
   }
 
-  if (!content || poem.isSaving) return;
   poem.isSaving = true;
-  const body = { id: poem.id, date: poem.date, content };
-  const endpoint = poem.isNew ? '/api/poems' : `/api/poems/${encodeURIComponent(poem.id)}`;
 
   try {
-    const response = await fetch(endpoint, {
-      method: poem.isNew ? 'POST' : 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+    await update(ref(database, `poems/${poem.firebaseKey}`), {
+      date: poem.date || getLocalDateKey(new Date()),
+      content,
+      updatedAt: serverTimestamp()
     });
-    if (!response.ok) throw new Error('Poem save failed');
-
-    poem.isNew = false;
   } catch (error) {
-    console.error('Poem could not be saved:', error);
+    console.error('Poem could not be saved to Firebase:', error);
   } finally {
     poem.isSaving = false;
-    if (poem.content.trim() !== content) queuePoemSave(poem, article);
   }
 }
 
-async function removeEmptyPoem(poem, article) {
+async function removePoem(poem) {
+  if (!poem.firebaseKey) return;
+
   try {
-    const response = await fetch(`/api/poems/${encodeURIComponent(poem.id)}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error('Poem delete failed');
-    app.poems = app.poems.filter((item) => item !== poem);
-    article.remove();
-    addBlankPoem();
+    await remove(ref(database, `poems/${poem.firebaseKey}`));
   } catch (error) {
-    console.error('Empty poem could not be removed:', error);
+    console.error('Poem could not be removed from Firebase:', error);
   }
 }
 
 function addBlankPoem() {
   if (app.poems.some((poem) => poem.isDraft)) return;
+
   const poem = createBlankPoem();
   app.poems.push(poem);
-  app.elements.poemsBoard.appendChild(createPoem(poem));
+  app.elements.poemsBoard.append(createPoem(poem));
 }
 
 function createBlankPoem() {
   return {
-    id: crypto.randomUUID(),
+    firebaseKey: `draft-${crypto.randomUUID()}`,
     date: getLocalDateKey(new Date()),
     content: '',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
     isDraft: true,
-    isNew: false,
+    isSaving: false
   };
 }

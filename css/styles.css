@@ -577,6 +577,17 @@ body {
   margin: 0 auto;
 }
 
+.poems-status {
+  margin: 0;
+  padding: 18px 20px;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.92);
+  color: #4a3522;
+  font-family: Arial, sans-serif;
+  line-height: 1.45;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
 .poems-notepad {
   position: relative;
   padding: 22px 22px 26px;
