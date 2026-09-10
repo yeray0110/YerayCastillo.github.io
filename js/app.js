@@ -132,6 +132,7 @@ function showSection(sectionName) {
 
   if (sectionName === 'timer') startLiveCountdown();
   if (sectionName === 'versicle') loadDailyVersicle();
+  if (sectionName === 'poems') schedulePoemTextareasResize();
 }
 
 /**
@@ -360,6 +361,7 @@ function renderPoems() {
   app.elements.poemsBoard.replaceChildren(...app.poems.map(createPoem));
 
   restoreFocusedTextarea(focusedKey, focusedSelection);
+  schedulePoemTextareasResize();
 }
 
 function showPoemsStatus(message) {
@@ -397,6 +399,20 @@ function autoResize(textarea) {
   textarea.style.height = `${textarea.scrollHeight}px`;
 }
 
+function resizeAllPoemTextareas() {
+  app.elements.poemsBoard.querySelectorAll('.poem-text').forEach(autoResize);
+}
+
+function schedulePoemTextareasResize() {
+  requestAnimationFrame(() => {
+    resizeAllPoemTextareas();
+
+    // Fonts and mobile browser viewport changes can finish a moment after the
+    // first paint, so run one more pass to keep saved poems fully open.
+    window.setTimeout(resizeAllPoemTextareas, 80);
+  });
+}
+
 function createPoem(poem) {
   const article = document.createElement('article');
   article.className = 'poems-notepad';
@@ -416,7 +432,7 @@ function createPoem(poem) {
   text.placeholder = 'Write a new poem...';
   text.setAttribute('aria-label', 'Poem text');
 
-  requestAnimationFrame(() => autoResize(text));
+  scheduleTextareaResize(text);
 
   text.addEventListener('input', () => {
     poem.content = text.value;
@@ -449,6 +465,13 @@ function createPoem(poem) {
 
   article.append(date, text);
   return article;
+}
+
+function scheduleTextareaResize(textarea) {
+  requestAnimationFrame(() => {
+    autoResize(textarea);
+    window.setTimeout(() => autoResize(textarea), 80);
+  });
 }
 
 async function promoteDraftPoem(poem, article) {
