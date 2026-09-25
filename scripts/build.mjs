@@ -4,6 +4,11 @@ const outputDirectory = new URL('../dist/', import.meta.url);
 const projectRoot = new URL('../', import.meta.url);
 const publishablePaths = [
   'index.html',
+  'anniversary.html',
+  'daily-verse.html',
+  'playlist.html',
+  'board.html',
+  'poems.html',
   'lista-compra.html',
   'bible',
   'css',

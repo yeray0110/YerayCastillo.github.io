@@ -62,7 +62,12 @@ async function initialisePage() {
   await loadSectionPartials();
   cacheElements();
   bindNavigation();
-  setPageChromeColor(pageChromeColors.home);
+  const initialSection = document.body.dataset.initialSection;
+  if (initialSection) {
+    showSection(initialSection);
+  } else {
+    setPageChromeColor(pageChromeColors.home);
+  }
   loadPoems();
 }
 
@@ -124,7 +129,13 @@ function bindNavigation() {
     });
   });
 
-  app.elements.menuButton.addEventListener('click', showMainMenu);
+  app.elements.menuButton.addEventListener('click', () => {
+    if (document.body.dataset.initialSection) {
+      window.location.href = 'index.html';
+      return;
+    }
+    showMainMenu();
+  });
 }
 
 /**
