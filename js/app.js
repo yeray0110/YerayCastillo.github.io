@@ -33,6 +33,94 @@ const pageChromeColors = {
   poems: '#b7ddff'
 };
 
+const meaningfulDailyPassages = [
+  { book: 'Génesis', chapter: 1, verses: [27] },
+  { book: 'Éxodo', chapter: 14, verses: [14] },
+  { book: 'Deuteronomio', chapter: 31, verses: [8] },
+  { book: 'Josué', chapter: 1, verses: [9] },
+  { book: 'Rut', chapter: 1, verses: [16] },
+  { book: '1 Samuel', chapter: 16, verses: [7] },
+  { book: '2 Samuel', chapter: 22, verses: [31] },
+  { book: '1 Crónicas', chapter: 16, verses: [11] },
+  { book: 'Nehemías', chapter: 8, verses: [10] },
+  { book: 'Ester', chapter: 4, verses: [14] },
+  { book: 'Job', chapter: 19, verses: [25] },
+  { book: 'Salmos', chapter: 23, verses: [1] },
+  { book: 'Salmos', chapter: 27, verses: [1] },
+  { book: 'Salmos', chapter: 34, verses: [8] },
+  { book: 'Salmos', chapter: 37, verses: [4] },
+  { book: 'Salmos', chapter: 46, verses: [1] },
+  { book: 'Salmos', chapter: 55, verses: [22] },
+  { book: 'Salmos', chapter: 56, verses: [3] },
+  { book: 'Salmos', chapter: 73, verses: [26] },
+  { book: 'Salmos', chapter: 91, verses: [1, 2] },
+  { book: 'Salmos', chapter: 103, verses: [12] },
+  { book: 'Salmos', chapter: 118, verses: [24] },
+  { book: 'Salmos', chapter: 119, verses: [105] },
+  { book: 'Salmos', chapter: 121, verses: [1, 2] },
+  { book: 'Proverbios', chapter: 3, verses: [5, 6] },
+  { book: 'Proverbios', chapter: 4, verses: [23] },
+  { book: 'Proverbios', chapter: 16, verses: [3] },
+  { book: 'Proverbios', chapter: 17, verses: [17] },
+  { book: 'Proverbios', chapter: 18, verses: [10] },
+  { book: 'Eclesiastés', chapter: 3, verses: [1] },
+  { book: 'Cantares', chapter: 8, verses: [7] },
+  { book: 'Isaías', chapter: 40, verses: [31] },
+  { book: 'Isaías', chapter: 41, verses: [10] },
+  { book: 'Isaías', chapter: 43, verses: [2] },
+  { book: 'Jeremías', chapter: 29, verses: [11] },
+  { book: 'Jeremías', chapter: 33, verses: [3] },
+  { book: 'Lamentaciones', chapter: 3, verses: [22, 23] },
+  { book: 'Miqueas', chapter: 6, verses: [8] },
+  { book: 'S. Mateo', chapter: 5, verses: [14, 15, 16] },
+  { book: 'S. Mateo', chapter: 6, verses: [33] },
+  { book: 'S. Mateo', chapter: 11, verses: [28] },
+  { book: 'S. Mateo', chapter: 19, verses: [6] },
+  { book: 'S. Marcos', chapter: 10, verses: [27] },
+  { book: 'S. Lucas', chapter: 1, verses: [37] },
+  { book: 'S. Lucas', chapter: 6, verses: [31] },
+  { book: 'S.Juan', chapter: 3, verses: [16] },
+  { book: 'S.Juan', chapter: 8, verses: [12] },
+  { book: 'S.Juan', chapter: 10, verses: [10] },
+  { book: 'S.Juan', chapter: 14, verses: [6] },
+  { book: 'S.Juan', chapter: 14, verses: [27] },
+  { book: 'S.Juan', chapter: 15, verses: [5] },
+  { book: 'S.Juan', chapter: 15, verses: [13] },
+  { book: 'S.Juan', chapter: 16, verses: [33] },
+  { book: 'Romanos', chapter: 5, verses: [8] },
+  { book: 'Romanos', chapter: 8, verses: [28] },
+  { book: 'Romanos', chapter: 8, verses: [31] },
+  { book: 'Romanos', chapter: 12, verses: [2] },
+  { book: 'Romanos', chapter: 12, verses: [12] },
+  { book: '1 Corintios', chapter: 13, verses: [4, 5, 6, 7] },
+  { book: '1 Corintios', chapter: 13, verses: [13] },
+  { book: '1 Corintios', chapter: 16, verses: [14] },
+  { book: '2 Corintios', chapter: 5, verses: [7] },
+  { book: '2 Corintios', chapter: 12, verses: [9] },
+  { book: 'Gálatas', chapter: 5, verses: [22, 23] },
+  { book: 'Efesios', chapter: 2, verses: [10] },
+  { book: 'Efesios', chapter: 3, verses: [20] },
+  { book: 'Efesios', chapter: 4, verses: [2] },
+  { book: 'Filipenses', chapter: 1, verses: [6] },
+  { book: 'Filipenses', chapter: 4, verses: [6, 7] },
+  { book: 'Filipenses', chapter: 4, verses: [13] },
+  { book: 'Filipenses', chapter: 4, verses: [19] },
+  { book: 'Colosenses', chapter: 3, verses: [14] },
+  { book: 'Colosenses', chapter: 3, verses: [23] },
+  { book: '1 Tesalonicenses', chapter: 5, verses: [16, 17, 18] },
+  { book: '2 Timoteo', chapter: 1, verses: [7] },
+  { book: 'Hebreos', chapter: 4, verses: [16] },
+  { book: 'Hebreos', chapter: 11, verses: [1] },
+  { book: 'Hebreos', chapter: 13, verses: [8] },
+  { book: 'Santiago', chapter: 1, verses: [5] },
+  { book: 'Santiago', chapter: 1, verses: [17] },
+  { book: '1 Pedro', chapter: 5, verses: [7] },
+  { book: '1 Juan', chapter: 4, verses: [8] },
+  { book: '1 Juan', chapter: 4, verses: [18] },
+  { book: '1 Juan', chapter: 4, verses: [19] },
+  { book: 'Apocalipsis', chapter: 21, verses: [4] }
+];
+
 const app = {
   biblePath: 'RVR1960-Spanish.json',
   anniversaryDate: getNextAnniversaryDate(),
@@ -262,19 +350,43 @@ function pluralise(word, number) {
 }
 
 /**
- * Loads the Bible, chooses one stable random verse for today, and displays it.
+ * Loads the Bible, chooses one stable meaningful passage for today, and displays it.
  */
 async function loadDailyVersicle() {
   app.elements.versicleBox.textContent = 'Loading today’s verse...';
 
   try {
     const verses = await getBibleVerses();
-    renderVersicle(getDailyRandomVerse(verses));
+    const meaningfulVerses = buildMeaningfulDailyVerses(verses);
+    renderVersicle(getDailyRandomVerse(meaningfulVerses));
   } catch (error) {
     console.error('Daily verse could not be loaded:', error);
     app.elements.versicleBox.textContent =
       'The daily verse could not load right now. Please check the Bible JSON file.';
   }
+}
+
+function buildMeaningfulDailyVerses(verses) {
+  const versesByReference = new Map(verses.map((verse) => [verse.reference, verse]));
+
+  return meaningfulDailyPassages.map(({ book, chapter, verses: verseNumbers }) => {
+    const passageVerses = verseNumbers.map((verseNumber) =>
+      versesByReference.get(`${book} ${chapter}:${verseNumber}`)
+    );
+
+    if (passageVerses.some((verse) => !verse)) {
+      throw new Error(`A curated daily passage is missing from ${book} ${chapter}.`);
+    }
+
+    const firstVerse = verseNumbers[0];
+    const lastVerse = verseNumbers[verseNumbers.length - 1];
+    const verseLabel = firstVerse === lastVerse ? firstVerse : `${firstVerse}-${lastVerse}`;
+
+    return {
+      reference: `${book} ${chapter}:${verseLabel}`,
+      content: passageVerses.map((verse) => verse.content).join(' ')
+    };
+  });
 }
 
 /**
@@ -301,7 +413,7 @@ function flattenBible(bible) {
       Object.entries(chapterVerses).forEach(([verseNumber, verseText]) => {
         verses.push({
           reference: `${bookName} ${chapterNumber}:${verseNumber}`,
-          content: verseText.trim()
+          content: verseText.trim().replace(/([,.;:!?])(?=\p{L})/gu, '$1 ')
         });
       });
     });
