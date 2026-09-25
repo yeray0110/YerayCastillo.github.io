@@ -127,8 +127,8 @@ body {
   transition: background-color 180ms ease, transform 180ms ease;
 }
 
-.menu-placeholder {
-  min-height: 52px;
+.menu-empty-button {
+  pointer-events: none;
 }
 
 .menu-buttons button:hover,
@@ -168,6 +168,21 @@ body {
   background: transparent;
   cursor: pointer;
   z-index: 20;
+}
+
+/* ---------- Our Bible ---------- */
+.bible-section {
+  height: 100dvh;
+  overflow: hidden;
+  background: #74c3e5;
+}
+
+.bible-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #74c3e5;
 }
 
 .menu-image {

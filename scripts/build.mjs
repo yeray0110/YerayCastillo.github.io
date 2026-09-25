@@ -5,6 +5,7 @@ const projectRoot = new URL('../', import.meta.url);
 const publishablePaths = [
   'index.html',
   'lista-compra.html',
+  'bible',
   'css',
   'js',
   'sections',
