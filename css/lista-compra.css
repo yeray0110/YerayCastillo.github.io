@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --ink: #1e2522;
   --muted: #6e716c;
   --paper: #f6f0e5;
@@ -13,6 +14,8 @@
 }
 
 * { box-sizing: border-box; }
+
+html { background: var(--paper); }
 
 body {
   min-width: 320px;

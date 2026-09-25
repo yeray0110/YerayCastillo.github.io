@@ -24,6 +24,15 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 
+const pageChromeColors = {
+  home: '#f7d18f',
+  timer: '#755241',
+  versicle: '#f9dca7',
+  playlist: '#081514',
+  directors: '#a1c4fd',
+  poems: '#b7ddff'
+};
+
 const app = {
   biblePath: 'RVR1960-Spanish.json',
   anniversaryDate: getNextAnniversaryDate(),
@@ -53,6 +62,7 @@ async function initialisePage() {
   await loadSectionPartials();
   cacheElements();
   bindNavigation();
+  setPageChromeColor(pageChromeColors.home);
   loadPoems();
 }
 
@@ -129,6 +139,7 @@ function showSection(sectionName) {
 
   app.elements.sections[sectionName].classList.remove('hidden');
   app.elements.backgrounds[sectionName].classList.remove('hidden');
+  setPageChromeColor(pageChromeColors[sectionName]);
 
   if (sectionName === 'timer') startLiveCountdown();
   if (sectionName === 'versicle') loadDailyVersicle();
@@ -146,6 +157,13 @@ function showMainMenu() {
   app.elements.homeSection.classList.remove('hidden');
   app.elements.backgrounds.homeImage.classList.remove('hidden');
   app.elements.backgrounds.homeGradient.classList.remove('hidden');
+  setPageChromeColor(pageChromeColors.home);
+}
+
+function setPageChromeColor(color) {
+  document.getElementById('theme-color')?.setAttribute('content', color);
+  document.documentElement.style.backgroundColor = color;
+  document.body.style.backgroundColor = color;
 }
 
 function hideAllSections() {

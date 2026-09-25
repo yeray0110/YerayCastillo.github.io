@@ -9,6 +9,7 @@ body {
   padding: 0;
   overflow: hidden;
   font-family: Arial, sans-serif;
+  background-color: #f7d18f;
 }
 
 @font-face {
@@ -99,10 +100,6 @@ body {
   width: 100%;
 }
 
-.mobile-position-guide {
-  display: none;
-}
-
 .main-title {
   max-width: 760px;
   margin: 20px auto 0;
@@ -166,21 +163,6 @@ body {
     font-size: clamp(2rem, 10vw, 2.65rem);
   }
 
-}
-
-@media (max-width: 900px) {
-  .mobile-position-guide {
-    position: fixed;
-    top: 50dvh;
-    right: 0;
-    left: 0;
-    display: block;
-    height: 5px;
-    background: #f00000;
-    box-shadow: 0 0 0 1px #fff, 0 0 8px rgba(0, 0, 0, 0.55);
-    pointer-events: none;
-    z-index: 50;
-  }
 }
 
 #menu {
