@@ -26,11 +26,11 @@ const database = getDatabase(firebaseApp);
 
 const pageChromeColors = {
   home: '#f7d18f',
-  timer: '#755241',
+  timer: '#ff9900',
   versicle: '#f9dca7',
   playlist: '#081514',
   directors: '#a1c4fd',
-  poems: '#b7ddff'
+  poems: '#ff9900'
 };
 
 const app = {
