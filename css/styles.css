@@ -166,18 +166,21 @@ body {
     font-size: clamp(2rem, 10vw, 2.65rem);
   }
 
+}
+
+@media (max-width: 900px) {
   .mobile-position-guide {
     position: fixed;
     top: 50dvh;
     right: 0;
     left: 0;
     display: block;
-    height: 3px;
-    background: #e00000;
+    height: 5px;
+    background: #f00000;
+    box-shadow: 0 0 0 1px #fff, 0 0 8px rgba(0, 0, 0, 0.55);
     pointer-events: none;
-    z-index: 30;
+    z-index: 50;
   }
-
 }
 
 #menu {
