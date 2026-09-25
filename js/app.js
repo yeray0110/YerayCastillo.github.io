@@ -40,8 +40,7 @@ const sectionFiles = [
   'sections/versicle.html',
   'sections/playlist.html',
   'sections/directors.html',
-  'sections/poems.html',
-  'sections/bible.html'
+  'sections/poems.html'
 ];
 
 document.addEventListener('DOMContentLoaded', initialisePage);
@@ -89,8 +88,7 @@ function cacheElements() {
       versicle: document.getElementById('versicle-section'),
       playlist: document.getElementById('playlist-section'),
       directors: document.getElementById('directors-section'),
-      poems: document.getElementById('poems-section'),
-      bible: document.getElementById('bible-section')
+      poems: document.getElementById('poems-section')
     },
 
     backgrounds: {
@@ -100,8 +98,7 @@ function cacheElements() {
       versicle: document.getElementById('background-gradient'),
       playlist: document.getElementById('playlist-background'),
       directors: document.getElementById('board-background'),
-      poems: document.getElementById('background-gradient'),
-      bible: document.getElementById('background-gradient')
+      poems: document.getElementById('background-gradient')
     }
   };
 }
