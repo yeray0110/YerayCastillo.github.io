@@ -1,5 +1,6 @@
 :root {
   color-scheme: light;
+  --page-edge-color: #f6f0e5;
   --ink: #1e2522;
   --muted: #6e716c;
   --paper: #f6f0e5;
@@ -15,7 +16,7 @@
 
 * { box-sizing: border-box; }
 
-html { background: var(--paper); }
+html { background: var(--page-edge-color); }
 
 body {
   min-width: 320px;
@@ -28,13 +29,35 @@ body {
   font-family: "DM Sans", Arial, sans-serif;
 }
 
+body::before,
+body::after {
+  position: fixed;
+  right: 0;
+  left: 0;
+  display: block;
+  background: var(--page-edge-color);
+  content: "";
+  pointer-events: none;
+  z-index: 20;
+}
+
+body::before {
+  top: 0;
+  height: env(safe-area-inset-top, 0px);
+}
+
+body::after {
+  bottom: 0;
+  height: env(safe-area-inset-bottom, 0px);
+}
+
 button, input { font: inherit; }
 button { cursor: pointer; }
 
 .shopping-app {
   width: min(1160px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 28px 0 52px;
+  padding: calc(28px + env(safe-area-inset-top, 0px)) 0 calc(52px + env(safe-area-inset-bottom, 0px));
 }
 
 .app-header {

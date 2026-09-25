@@ -1,3 +1,8 @@
+:root {
+  color-scheme: light;
+  --page-edge-color: #f7d18f;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -9,7 +14,29 @@ body {
   padding: 0;
   overflow: hidden;
   font-family: Arial, sans-serif;
-  background-color: #f7d18f;
+  background-color: var(--page-edge-color);
+}
+
+body::before,
+body::after {
+  position: fixed;
+  right: 0;
+  left: 0;
+  display: block;
+  background: var(--page-edge-color);
+  content: "";
+  pointer-events: none;
+  z-index: 100;
+}
+
+body::before {
+  top: 0;
+  height: env(safe-area-inset-top, 0px);
+}
+
+body::after {
+  bottom: 0;
+  height: env(safe-area-inset-bottom, 0px);
 }
 
 @font-face {
@@ -26,7 +53,7 @@ body {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #f9dca7;
+  background-color: var(--page-edge-color);
   z-index: 0;
 }
 
@@ -167,7 +194,7 @@ body {
 
 #menu {
   position: fixed;
-  top: 10px;
+  top: calc(10px + env(safe-area-inset-top, 0px));
   right: 10px;
   width: 44px;
   height: 44px;

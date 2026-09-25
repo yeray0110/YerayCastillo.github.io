@@ -26,11 +26,11 @@ const database = getDatabase(firebaseApp);
 
 const pageChromeColors = {
   home: '#f7d18f',
-  timer: '#ff9900',
+  timer: '#91bdd9',
   versicle: '#f9dca7',
   playlist: '#081514',
   directors: '#a1c4fd',
-  poems: '#ff9900'
+  poems: '#b7ddff'
 };
 
 const app = {
@@ -161,9 +161,16 @@ function showMainMenu() {
 }
 
 function setPageChromeColor(color) {
-  document.getElementById('theme-color')?.setAttribute('content', color);
-  document.documentElement.style.backgroundColor = color;
-  document.body.style.backgroundColor = color;
+  const currentTheme = document.querySelector('meta[name="theme-color"]');
+  const nextTheme = currentTheme?.cloneNode();
+
+  if (currentTheme && nextTheme) {
+    nextTheme.setAttribute('content', color);
+    currentTheme.replaceWith(nextTheme);
+  }
+
+  document.documentElement.style.setProperty('--page-edge-color', color);
+  document.querySelector('.background-container')?.style.setProperty('background-color', color);
 }
 
 function hideAllSections() {
